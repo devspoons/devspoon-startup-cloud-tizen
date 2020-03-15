@@ -1,8 +1,8 @@
-# aincloud
-> AinCloud creates third-party application servers that automatically interact with SmartThings, Bixby, and other systems through Docker. 
+# devspoon-startup-cloud-tizen
+> devspoon-startup-cloud-tizen creates third-party application servers that automatically interact with SmartThings, Bixby, and other systems through Docker. 
   This provides a server infrastructure of back-end services for Tizen-based IoT devices.
   
-> AinCloud는 docker를 통해 SmartThings, Bixby 그리고 다른 시스템들과 자동으로 상호 연동되는 서드파티 어플리케이션 서버를 만들어 줍니다.
+> devspoon-startup-cloud-tizen는 docker를 통해 SmartThings, Bixby 그리고 다른 시스템들과 자동으로 상호 연동되는 서드파티 어플리케이션 서버를 만들어 줍니다.
   본 기술은 Tizen-based IoT 장치들을 위한 back-end 인프라를 구축는 방법을 제공해 줍니다.
 
 ## 설치 방법
