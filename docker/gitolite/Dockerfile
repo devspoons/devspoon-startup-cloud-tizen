@@ -39,9 +39,9 @@ RUN adduser --disabled-password --gecos "" --shell /bin/bash --home /home/git-ma
 
 RUN su git-manager -c "ssh-keygen -f /home/git-manager/.ssh/git-manager -b 4096 -t rsa -N ''"
 
-ADD system/id_rsa.pub /home/git-manager/.ssh/authorized_keys
+ADD system/client_user.pub /home/git-manager/.ssh/authorized_keys
 
-ADD system/id_rsa.pub /home/git-manager/id_rsa.pub
+ADD system/client_user.pub /home/git-manager/client_user.pub
 
 ADD system/config /home/git-manager/.ssh/config
 
