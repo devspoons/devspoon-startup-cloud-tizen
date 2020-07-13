@@ -84,7 +84,7 @@ services:
       - ../../log/supervisor/:/var/log/supervisor/
       - ./static/:/var/openproject/assets/
     expose:
-      - "8080"   
+      - "8080"
     environment:
       TZ: "Asia/Seoul"
     restart: always
