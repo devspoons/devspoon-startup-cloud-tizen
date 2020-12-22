@@ -36,7 +36,6 @@ do
     fi
 done 
 
-
 echo -n "Enter a IdentityFile path (default : ~/.ssh/git-manager) >"
 read identityFile_path
 echo  "Entered a IdentityFile path: $identityFile_path"
