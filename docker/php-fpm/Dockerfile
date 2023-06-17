@@ -1,4 +1,4 @@
-FROM tobi312/php:8.0-fpm
+FROM tobi312/php:latest
 # https://hub.docker.com/r/tobi312/php
 
 ENV OS_LOCALE="en_US.utf8" \
@@ -15,5 +15,5 @@ RUN dpkg-reconfigure locales \
 RUN apt-get purge -y --auto-remove software-properties-common wget gnupg \
     && apt-get autoremove -y && apt-get clean \
     && rm -rf /var/lib/apt/lists/* 	
-	
+
 #RUN ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime
