@@ -15,5 +15,6 @@ RUN dpkg-reconfigure locales \
 RUN apt-get purge -y --auto-remove software-properties-common wget gnupg \
     && apt-get autoremove -y && apt-get clean \
     && rm -rf /var/lib/apt/lists/* 	
+RUN update-ca-certificates
 
 #RUN ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime
