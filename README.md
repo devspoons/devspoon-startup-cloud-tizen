@@ -9,31 +9,31 @@ This project no longer offers open source development support for startup commer
 
 ## Project management solutions
 
-- **[OpenProject] :** Open source project management software to help you work on your project efficiently
+- **[OpenProject]** : Open source project management software to help you work on your project efficiently
 
-- **[Jenkins] :** As one of the CI tools, CI (Continuous Integration) refers to continuous integration, which is an automated process for developers, and new code changes are automatically built and tested regularly to notify developers to solve problems that can occur when multiple developers develop simultaneously. Software that helps secure development stability and reliability
+- **[Jenkins]** : As one of the CI tools, CI (Continuous Integration) refers to continuous integration, which is an automated process for developers, and new code changes are automatically built and tested regularly to notify developers to solve problems that can occur when multiple developers develop simultaneously. Software that helps secure development stability and reliability
 
-- **[Gitolite] :** Configuration Management Tool. user can install git server software at own server
+- **[Gitolite]** : Configuration Management Tool. user can install git server software at own server
 
-- **[Harbor] :** The Private Docker Registry Server for businesses that store and distribute Docker Images
+- **[Harbor]** : The Private Docker Registry Server for businesses that store and distribute Docker Images
 
-- **[OpenProject(KR)] :** 프로젝트를 효율적으로 진행할 수 있도록 지원하는 오픈 소스 프로젝트 관리 소프트웨어
+- **[OpenProject(KR)]** : 프로젝트를 효율적으로 진행할 수 있도록 지원하는 오픈 소스 프로젝트 관리 소프트웨어
 
-- **[Jenkins(KR)] :** CI 툴 중 하나로 CI (Continuous Integration)는 개발자를 위한 자동화 프로세스인 지속적인 통합을 말하며 새로운 코드 변경 사항들이 정기적으로 자동 빌드 및 테스트되어 개발자에게 알려줌으로 여러명의 개발자가 동시에 개발하며 발생할 수 있는 문제들을 해결하여 개발의 안정성 및 신뢰성을 확보할 수 있도록 지원하는 소프트웨어
+- **[Jenkins(KR)]** : CI 툴 중 하나로 CI (Continuous Integration)는 개발자를 위한 자동화 프로세스인 지속적인 통합을 말하며 새로운 코드 변경 사항들이 정기적으로 자동 빌드 및 테스트되어 개발자에게 알려줌으로 여러명의 개발자가 동시에 개발하며 발생할 수 있는 문제들을 해결하여 개발의 안정성 및 신뢰성을 확보할 수 있도록 지원하는 소프트웨어
 
-- **[Gitolite] :** 형상 관리 도구 혹은 버전관리 시스템으로 자체적으로 설치하고 운영할 수 있는 git 소프트웨어
+- **[Gitolite]** : 형상 관리 도구 혹은 버전관리 시스템으로 자체적으로 설치하고 운영할 수 있는 git 소프트웨어
 
-- **[Harbor(KR)] :** Docker Image를 저장하고 분배하는 기업용 Private Docker Registry Server
+- **[Harbor(KR)]** : Docker Image를 저장하고 분배하는 기업용 Private Docker Registry Server
 
 ## Features
 
-- **Supports creation of configuration files required for each service:** Environment files and security keys used for each service are created according to the user's keyboard input using a shell script or automatically generated.
+- **Supports creation of configuration files required for each service** : Environment files and security keys used for each service are created according to the user's keyboard input using a shell script or automatically generated.
 
-- **User custom installation support :** You can selectively install only the desired solution at compose/project_mng_service/(solution) without having to install all the solutions.
+- **User custom installation support** : You can selectively install only the desired solution at compose/project_mng_service/(solution) without having to install all the solutions.
 
   - If you want to install more than one solution at the same time, just uncomment what you want at compose/master_service/docker-compose.yml.
 
-- **Access web server and project management solutions with one nginx through nginx proxy :** All solutions are available on one nginx server.
+- **Access web server and project management solutions with one nginx through nginx proxy** : All solutions are available on one nginx server.
 
   - You can use ssh for direct access to gitolite.
   - The harbor will be supported in a future version due to security issues, and you can connect to your own server through harbor.yml.
@@ -48,13 +48,13 @@ This project no longer offers open source development support for startup commer
     jen.test.com -> jenkins solution
     ```
 
-- **각 서비스들에 필요한 환경설정 파일 생성 지원 :** 각 서비스들에 사용되는 환경파일 및 보안키 등을 쉘 스크립트를 이용해 사용자의 키보드 입력에 맞춰 생성하거나 자동으로 생성합니다.
+- **각 서비스들에 필요한 환경설정 파일 생성 지원** : 각 서비스들에 사용되는 환경파일 및 보안키 등을 쉘 스크립트를 이용해 사용자의 키보드 입력에 맞춰 생성하거나 자동으로 생성합니다.
 
-- **사용자 맞춤식 설치 지원 :** 모든 솔루션을 설치할 필요 없이 compose/project_mng_service/(solution)에서 원하는 솔루션만 선택적으로 설치할 수 있습니다.
+- **사용자 맞춤식 설치 지원** : 모든 솔루션을 설치할 필요 없이 compose/project_mng_service/(solution)에서 원하는 솔루션만 선택적으로 설치할 수 있습니다.
 
   - 두개 이상의 솔루션을 동시에 설치하고 싶다면 compose/master_service/docker-compose.yml에서 원하는 항목만 주석 제거하면 됩니다.
 
-- **nginx의 proxy를 통해 하나의 nginx로 웹서버 및 프로젝트 관리 솔루션들에 접근 가능 :** 하나의 nginx 서버에서 모든 솔루션을 이용할 수 있습니다.
+- **nginx의 proxy를 통해 하나의 nginx로 웹서버 및 프로젝트 관리 솔루션들에 접근 가능** : 하나의 nginx 서버에서 모든 솔루션을 이용할 수 있습니다.
 
   - gitolite는 ssh로 직접 접근하여 사용하면 됩니다.
   - harbor는 보안문제로 차후 버전에서 지원할 예정이며 harbor.yml을 통해 자체 서버로 연결 가능합니다.
@@ -197,8 +197,8 @@ This project no longer offers open source development support for startup commer
 
 ## Community
 
-- **Personal Website :** Owner's personam website is [devspoon.com]
-- **Github.io :** Ther are more detail guide [devspoon.github.io]
+- **Personal Website** : Owner's personam website is [devspoon.com]
+- **Github.io** : Ther are more detail guide [devspoon.github.io]
 
 ## Demos
 
@@ -206,10 +206,10 @@ This project no longer offers open source development support for startup commer
 
 ## Partners and Users
 
-- Lim Do-Hyun Owner Developer/project Manager, bluebamus@gmail.com  
+- Lim Do-Hyun Owner Developer/project Manager, bluebamus@gmail.com
   Personal github.io : [bluebamus.github.io]
 
-- 임도현 Owner 개발자/기획자, bluebamus@gmail.com  
+- 임도현 Owner 개발자/기획자, bluebamus@gmail.com
   개인 github.io 사이트 : [bluebamus.github.io]
 
 <!-- Markdown link & img dfn's -->
