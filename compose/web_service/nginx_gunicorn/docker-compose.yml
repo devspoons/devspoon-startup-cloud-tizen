@@ -1,4 +1,4 @@
-version: "3"
+version: "3.9"
 services:
   webserver:
     build: ../../../docker/nginx/
@@ -38,7 +38,7 @@ services:
       - ../../../www:/www
       - ../../../log:/log
       - ../../../config/app-server/gunicorn/:/gunicorn
-    command: bash -c "poetry config virtualenvs.create false && poetry install --no-root && gunicorn -c /gunicorn/gunicorn_config.py"
+    command: bash -c "poetry config virtualenvs.create false && poetry install --no-root --without test && gunicorn -c /gunicorn/gunicorn_config.py"
     environment:
       TZ: "Asia/Seoul"
     restart: always
