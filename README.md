@@ -31,7 +31,15 @@ This project no longer offers open source development support for startup commer
 
 - **User custom installation support** : You can selectively install only the desired solution at compose/project_mng_service/(solution) without having to install all the solutions.
 
-  - If you want to install more than one solution at the same time, just uncomment what you want at compose/master_service/docker-compose.yml.
+  - To install more than one solution at the same time, use the docker-compose file located in the "compose/master_service/" folder.
+
+  - How to use: docker-compose -f docker-compose-php.yml up -d
+
+  - How to use (celery): docker-compose -f docker-compose-php.yml --profile celery up -d
+
+  - How to use (redis): docker-compose -f docker-compose-php.yml --profile redis up -d
+
+  - How to use (all): docker-compose -f docker-compose-php.yml --profile celery --profile redis up -d
 
 - **Access web server and project management solutions with one nginx through nginx proxy** : All solutions are available on one nginx server.
 
@@ -52,7 +60,15 @@ This project no longer offers open source development support for startup commer
 
 - **사용자 맞춤식 설치 지원** : 모든 솔루션을 설치할 필요 없이 compose/project_mng_service/(solution)에서 원하는 솔루션만 선택적으로 설치할 수 있습니다.
 
-  - 두개 이상의 솔루션을 동시에 설치하고 싶다면 compose/master_service/docker-compose.yml에서 원하는 항목만 주석 제거하면 됩니다.
+  - 동시에 2개 이상의 솔루션을 설치하려면 "compose/master_service/" 폴더에 있는 docker-compose 파일을 사용하세요.
+
+  - 사용방법 : docker-compose -f docker-compose-php.yml up -d
+
+  - 사용방법(celery) : docker-compose -f docker-compose-php.yml --profile celery up -d
+
+  - 사용방법(redis) : docker-compose -f docker-compose-php.yml --profile redis up -d
+
+  - 사용방법(all): docker-compose -f docker-compose-php.yml --profile celery --profile redis up -d
 
 - **nginx의 proxy를 통해 하나의 nginx로 웹서버 및 프로젝트 관리 솔루션들에 접근 가능** : 하나의 nginx 서버에서 모든 솔루션을 이용할 수 있습니다.
 
