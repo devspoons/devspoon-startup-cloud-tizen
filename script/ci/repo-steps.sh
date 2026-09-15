@@ -106,5 +106,14 @@ for f in "$ROOT"/compose/master_service/docker-compose-*.yml "$ROOT"/compose/pro
         && echo "  [PASS] $f" || fail "$f"
 done
 [ "$n" -eq 8 ] || fail "검사 파일 수 $n (기대 8)"
+echo "### git 저장소 ###"
+git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1 && echo "  [PASS] git" || fail "git 저장소 아님 — 추적 검사 불가"
+
+echo "### smart_mirror_rest 부재 (D-3 A, CT-06) ###"
+if [ -e "$ROOT/www/smart_mirror_rest" ]; then fail "www/smart_mirror_rest 잔존"; else echo "  [PASS] 없음"; fi
+
+echo "### 추적 가상환경 0 (CT-07) ###"
+n=$(git -C "$ROOT" ls-files 2>/dev/null | grep -c '/site-packages/')
+[ "$n" -eq 0 ] && echo "  [PASS] 0" || fail "추적 site-packages 파일 $n"
 echo "=== RESULT: FAILS=$FAILS ==="
 [ "$FAILS" -eq 0 ] || exit 1
