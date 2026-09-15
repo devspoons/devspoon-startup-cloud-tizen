@@ -276,7 +276,7 @@ docker compose restart      # 기동 명령이 다시 돌며 이관한 DB 에 �
    > fi
    > ```
    >
-   > `stop` 줄이 오류 없이 끝났는지 먼저 확인하세요(예: master 에서 `-f` 를 빠뜨리면 실패합니다). 확인을 놓쳐도 `openproject` 컨테이너가 실행 중이면 백업을 거부합니다. 정상 종료가 아니라 모든 PostgreSQL 프로세스가 멈춘 뒤의 파일 복사본(crash-consistent)이므로, 복원하면 PostgreSQL 이 크래시 복구를 거쳐 기동합니다(`postmaster.pid` 가 들어 있어도 됩니다). 논리 백업(SQL)은 [OpenProject 공식 문서][OpenProject docs]의 백업 절차(`pg_dump`)를 참고하세요. 없는 경로를 bind 하면 Docker Desktop 등 일부 엔진은 `--mount` 여도 빈 폴더를 만들고 빈 아카이브가 성공한 것처럼 보입니다. 그래서 호스트에서 `pgdata` 폴더를 먼저 확인하고, 컨테이너 안에서 `PG_VERSION`(PostgreSQL 클러스터 표식)이 있을 때만 아카이브를 만듭니다. 아카이브는 `.partial` 에 쓴 뒤 성공했을 때만 기존 백업과 교체합니다. 삭제는 `tar tzf ~/openproject-pgdata.tgz` 로 내용을 확인한 뒤에만 하세요. 백업만 할 때는 `(cd "$D" && docker compose start openproject)`(master: `docker compose -f docker-compose-<stack>.yml start openproject`)로 다시 기동합니다.
+   > `stop` 줄이 오류 없이 끝났는지 먼저 확인하세요(예: master 에서 `-f` 를 빠뜨리면 실패합니다). 확인을 놓쳐도 `openproject` 컨테이너가 실행 중이면 백업을 거부합니다. 정상 종료가 아니라 모든 PostgreSQL 프로세스가 멈춘 뒤의 파일 복사본(crash-consistent)이므로, 복원하면 PostgreSQL 이 크래시 복구를 거쳐 기동합니다(`postmaster.pid` 가 들어 있어도 됩니다). 논리 백업(SQL)은 [OpenProject 공식 문서][OpenProject backup]의 백업 절차(`pg_dump`)를 참고하세요. 없는 경로를 bind 하면 Docker Desktop 등 일부 엔진은 `--mount` 여도 빈 폴더를 만들고 빈 아카이브가 성공한 것처럼 보입니다. 그래서 호스트에서 `pgdata` 폴더를 먼저 확인하고, 컨테이너 안에서 `PG_VERSION`(PostgreSQL 클러스터 표식)이 있을 때만 아카이브를 만듭니다. 아카이브는 `.partial` 에 쓴 뒤 성공했을 때만 기존 백업과 교체합니다. 삭제는 `tar tzf ~/openproject-pgdata.tgz` 로 내용을 확인한 뒤에만 하세요. 백업만 할 때는 `(cd "$D" && docker compose start openproject)`(master: `docker compose -f docker-compose-<stack>.yml start openproject`)로 다시 기동합니다.
 
 3. proxy 샘플 복사(저장소 루트): `P=config/web-server/nginx/php/proxy/openproject; cp "$P/openproject_proxy.conf.example" "$P/openproject_proxy.conf"` 후 `server_name` 수정.
 4. 기동(저장소 루트에서, `--build` 는 업그레이드나 Dockerfile 변경 뒤 nginx 이미지 재빌드): `cd compose/project_mng_service/nginx_openproject && docker compose up -d --build` (HTTP 전용 — 위 규칙 참조).
@@ -370,7 +370,9 @@ docker compose restart      # 기동 명령이 다시 돌며 이관한 DB 에 �
 [Harbor(KR)]: https://engineering.linecorp.com/ko/blog/harbor-for-private-docker-registry/
 [mailgun]: https://www.mailgun.com/
 [sendgrid]: https://sendgrid.com/
-[OpenProject]: https://docs.openproject.org/user-guide/wiki/
+[OpenProject]: https://www.openproject.org/docs/user-guide/wiki/
+[OpenProject docs]: https://www.openproject.org/docs/installation-and-operations/operation/upgrading/#compose-based-installation
+[OpenProject backup]: https://www.openproject.org/docs/installation-and-operations/operation/backing-up/#docker-based-installation
 [Jenkins]: https://en.wikipedia.org/wiki/Jenkins_(software)
 [Jenkins]: https://en.wikipedia.org/wiki/Jenkins_(software)
 [Gitolite]: https://wiki.archlinux.org/index.php/Gitolite
