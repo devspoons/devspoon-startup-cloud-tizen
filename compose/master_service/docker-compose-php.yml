@@ -1,6 +1,6 @@
 services:
   webserver:
-    image: nginx:latest
+    build: ../../docker/nginx/
     logging:
       driver: "${LOG_DRIVER}"
       options:
