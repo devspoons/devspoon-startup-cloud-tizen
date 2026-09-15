@@ -347,12 +347,12 @@ docker compose restart      # 기동 명령이 다시 돌며 이관한 DB 에 �
 
 ## Community
 
-- **Personal Website** : Owner's personam website is [devspoon.com]
-- **Github.io** : Ther are more detail guide [devspoon.github.io]
+- **Personal Website** : Owner's personam website is devspoon.com
+- **Github.io** : Ther are more detail guide devspoon.github.io
 
 ## Demos
 
-- **[youtube]** - Preparing
+- **youtube** - Preparing
 
 ## Partners and Users
 
@@ -376,5 +376,4 @@ docker compose restart      # 기동 명령이 다시 돌며 이관한 DB 에 �
 [Jenkins]: https://en.wikipedia.org/wiki/Jenkins_(software)
 [Gitolite]: https://wiki.archlinux.org/index.php/Gitolite
 [Harbor]: https://en.wikipedia.org/wiki/Harbor
-[bluebamus.github.io]: bluebamus.github.io
-[devspoons.github.io]: devspoons.github.io
+[bluebamus.github.io]: https://bluebamus.github.io
