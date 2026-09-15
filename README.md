@@ -374,7 +374,6 @@ docker compose restart      # 기동 명령이 다시 돌며 이관한 DB 에 �
 [OpenProject docs]: https://www.openproject.org/docs/installation-and-operations/operation/upgrading/#compose-based-installation
 [OpenProject backup]: https://www.openproject.org/docs/installation-and-operations/operation/backing-up/#docker-based-installation
 [Jenkins]: https://en.wikipedia.org/wiki/Jenkins_(software)
-[Jenkins]: https://en.wikipedia.org/wiki/Jenkins_(software)
 [Gitolite]: https://wiki.archlinux.org/index.php/Gitolite
 [Harbor]: https://en.wikipedia.org/wiki/Harbor
 [bluebamus.github.io]: bluebamus.github.io
