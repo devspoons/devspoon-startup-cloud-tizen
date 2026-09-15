@@ -1,7 +1,6 @@
 # devspoon-startup-cloud-tizen
 
-devspoon-startup-cloud-tizen creates third-party application servers that automatically interact with SmartThings, Bixby, and other systems through Docker.
-This provides a server infrastructure of back-end services for Tizen-based IoT devices.
+Docker-based templates for a web stack (nginx + Django/PHP) and project-management solutions (OpenProject, Jenkins, Gitolite, Harbor). SmartThings/Bixby-integrated application servers are not provided (open-source development support discontinued).
 
 # Discontinuation of support for open source development
 
