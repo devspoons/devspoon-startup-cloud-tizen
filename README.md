@@ -347,8 +347,7 @@ docker compose restart      # 기동 명령이 다시 돌며 이관한 DB 에 �
 
 ## Community
 
-- **Personal Website** : Owner's personam website is devspoon.com
-- **Github.io** : Ther are more detail guide devspoon.github.io
+- **Personal Website** : Owner's personal website is devspoon.com
 
 ## Demos
 
