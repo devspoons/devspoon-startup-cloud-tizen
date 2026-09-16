@@ -32,9 +32,11 @@ for e in compose/master_service/.env-example compose/project_mng_service/nginx_o
     if grep -qE '^OPENPROJECT_SECRET_KEY_BASE=$' "$ROOT/$e"; then echo "  [PASS] $e"; else fail "$e — OPENPROJECT_SECRET_KEY_BASE 예시값 존재"; fi
 done
 
-echo "### gitolite sshd 포워딩 차단 (SRV1-SEC-03) ###"
-for k in "X11Forwarding no" "AllowTcpForwarding no"; do
-    if grep -qE "^$k\$" "$ROOT/docker/gitolite/system/sshd_config"; then echo "  [PASS] $k"; else fail "sshd_config — $k 없음"; fi
+# Match 앞 유효 줄(대소문자 무시)이 전부 기대값 — sshd 가 쓰는 첫 값·마지막 값 모두 보장, 줄이 없어도 FAIL
+echo "### gitolite sshd 하드닝·포워딩 차단 (SRV1-SEC-03) ###"
+for k in "PermitRootLogin no" "PasswordAuthentication no" "X11Forwarding no" "AllowTcpForwarding no"; do
+    v=$(awk -v k="${k%% *}" 'tolower($1)=="match"{exit} tolower($1)==tolower(k){print $2}' "$ROOT/docker/gitolite/system/sshd_config" | sort -u | paste -sd,)
+    [ "$v" = "${k#* }" ] && echo "  [PASS] gitolite $k" || fail "gitolite sshd_config — $k 아님(유효 값: ${v:-없음})"
 done
 
 echo "### master_service python 4조합 — migrate 는 app 서비스만 기동 전 1회, celery·beat 는 app healthy 뒤 (CL-WP2-19-R2) ###"
