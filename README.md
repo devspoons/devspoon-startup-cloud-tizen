@@ -160,7 +160,7 @@ cd compose/web_service/nginx_gunicorn
 docker compose up -d --build  # app-data 볼륨 생성 (빈 DB 로 migrate 됨)
 docker compose cp ../../../www/django_sample/db.sqlite3 gunicorn-app:/data/django_sample.sqlite3
 docker compose exec gunicorn-app chown www-data:www-data /data/django_sample.sqlite3
-docker compose restart      # 기동 명령이 다시 돌며 이관한 DB 에 미적용 migrate 반영
+docker compose restart gunicorn-app   # 기동 명령이 다시 돌며 이관한 DB 에 미적용 migrate 반영 (app 만 — 전체 restart 는 nginx 기동 경합)
 ```
 
 > ⚠️ **`docker compose down -v` 는 `app-data` 볼륨, 즉 SQLite DB 를 삭제합니다.** 컨테이너만 내리려면 `docker compose stop` 을 쓰세요 (`down` 은 비권장, 특히 `-v`; 프로필 서비스는 §2 처럼 `--profile` 을 붙임). 백업: `docker compose cp gunicorn-app:/data/django_sample.sqlite3 ./backup.sqlite3`. master_service 의 gitolite 저장소 볼륨(`gitolite-repos`)도 `-v` 로 삭제됩니다.
@@ -182,6 +182,7 @@ docker compose restart      # 기동 명령이 다시 돌며 이관한 DB 에 �
 ### 5. nginx · php 설정
 
 - nginx conf 생성기: `config/web-server/nginx/<gunicorn|uvicorn|uwsgi|php>/` 의 `nginx_http_conf.sh` · `nginx_https_conf.sh` 가 `sample_nginx_http(s).conf` 로 `conf.d/` 에 도메인별 conf 를 만듭니다(`-h` 로 옵션 확인). daphne 는 gunicorn 폴더를 씁니다.
+- nginx 기동 훅: 이미지의 `/docker-entrypoint.d/30-wait-upstreams.sh` 가 conf 의 upstream(앱 컨테이너) 이름이 해석될 때까지 최대 `NGINX_UPSTREAM_WAIT` 초(기본 30, `0` 이면 비활성, webserver `environment` 로 조정) 기다린 뒤 nginx 를 띄웁니다 — 재부팅·`start` 처럼 app 보다 webserver 가 먼저 뜰 때 `[emerg] host not found in upstream` 으로 죽는 것을 막습니다. 전체 `docker compose restart` 는 동시 재시작이라 훅으로도 완전히 막히지 않으니 conf 반영은 `nginx -s reload`, 전체 재기동은 `stop` → `start` 를 쓰세요.
 - php-fpm pool 은 **`config/app-server/php/pool.d/www.conf` 를 편집**합니다. compose 는 `www.conf`(`/usr/local/etc/php-fpm.d/www.conf`)와 `config/app-server/php/php_ini/php.ini` 만 단일 파일로 읽기 전용 마운트하므로, `php_conf.sh` 가 `pool.d/` 에 만드는 `<DOMAIN>_php.conf` 는 로드되지 않습니다.
 
 ### 6. CI — `script/ci/run-ci.sh`
@@ -287,7 +288,7 @@ docker compose restart      # 기동 명령이 다시 돌며 이관한 DB 에 �
 
 1. proxy 샘플 복사(저장소 루트): `P=config/web-server/nginx/php/proxy/jenkins; cp "$P/jenkins_proxy.conf.example" "$P/jenkins_proxy.conf"` 후 `server_name` 수정.
 2. `.env` 생성(저장소 루트): `D=compose/project_mng_service/nginx_jenkins; cp "$D/.env-example" "$D/.env"` (로그 설정만, 비밀값 없음).
-3. 기동(저장소 루트에서, `--build` 는 업그레이드나 Dockerfile 변경 뒤 nginx 이미지 재빌드): `cd compose/project_mng_service/nginx_jenkins && docker compose up -d --build` — 이미지 `jenkins/jenkins:lts-jdk21`, 데이터는 같은 폴더 `jenkins_home`(HTTP 전용 — 위 규칙 참조).
+3. 기동(저장소 루트에서, `--build` 는 업그레이드나 Dockerfile 변경 뒤 nginx 이미지 재빌드): `cd compose/project_mng_service/nginx_jenkins && docker compose up -d --build` — 이미지 `jenkins/jenkins:lts-jdk21`, 데이터는 같은 폴더 `jenkins_home`(HTTP 전용 — 위 규칙 참조). jenkins 이미지는 uid 1000 으로 동작하므로, 기동 때마다 1회성 `jenkins-init` 서비스가 같은 이미지를 root 로 실행해 `jenkins_home` 폴더 소유자를 1000 으로 맞춘 뒤 jenkins 가 뜹니다(클론한 호스트 사용자 uid 가 1000 이 아니어도 `missing rw permissions on JENKINS_HOME` 재시작 루프가 생기지 않음 — master_service 도 동일). 그래서 이 폴더는 호스트에서 uid 1000 소유로 보입니다.
 4. There are advanced information in [Jenkins Official User Documentation](https://www.jenkins.io/doc/)
 
 ---
@@ -321,9 +322,9 @@ docker compose restart      # 기동 명령이 다시 돌며 이관한 DB 에 �
 
 ### Harbor
 
-1. 저장소에 있던 Compose v1 설치 스크립트는 삭제됐습니다. 번들된 Harbor v2.0.0 installer(`install.sh` · `common.sh`)는 `docker compose` 플러그인을 쓰지 않고 **`docker-compose` 라는 이름의 명령**을 직접 호출합니다. `common.sh` 의 `check_dockercompose` 가 `docker-compose --version` 을 실행해 **1.18.0 이상**으로 파싱하지 못하면 `[Step 1]` 에서 `Need to install docker-compose(1.18.0+) by yourself first and run this script again.` 를 출력하고 **exit 1** 로 중단하므로, 레거시 Compose v1(1.18.0+) 바이너리를 운영자가 직접 PATH 에 준비합니다. (버전 판정은 이름이 `docker-compose` 인 명령의 출력만 봅니다 — v2 형식 문자열을 내는 같은 이름의 독립 실행 파일도 이 관문은 통과하지만, 이 저장소는 그 조합으로 Harbor 를 끝까지 기동해 본 적이 없습니다.)
+1. 저장소에 있던 Compose v1 설치 스크립트는 삭제됐습니다. 번들된 Harbor v2.0.0 installer(`install.sh` · `common.sh`)는 `docker compose` 플러그인을 쓰지 않고 **`docker-compose` 라는 이름의 명령**을 직접 호출합니다. `common.sh` 의 `check_dockercompose` 가 `docker-compose --version` 을 실행해 **1.18.0 이상**으로 파싱하지 못하면 `[Step 1]` 에서 `Need to install docker-compose(1.18.0+) by yourself first and run this script again.` 를 출력하고 **exit 1** 로 중단하므로, 레거시 Compose v1(1.18.0+) 바이너리를 운영자가 직접 PATH 에 준비합니다. (버전 판정은 이름이 `docker-compose` 인 명령의 출력만 봅니다 — v2 형식 문자열을 내는 같은 이름의 실행 파일도 이 관문을 통과합니다. `docker compose` 플러그인을 부르는 래퍼 `printf '#!/bin/sh\ncase "$1" in --version|version) exec docker compose version ;; esac\nexec docker compose "$@"\n' | sudo tee /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose` 로 http·https 설치와 기동(포털·API·레지스트리 토큰)을 검증했습니다 — 최근 Compose 플러그인은 `docker compose --version` 에 버전이 아니라 사용법을 출력하므로 래퍼가 `version` 으로 바꿔 전달해야 합니다.)
 2. `install.sh` 는 내부에서 `./prepare` 를 **직접 실행**하므로, `prepare` 한 파일만 저장소에 **실행 권한(`100755`)으로 추적**됩니다 — 별도 `chmod` 없이 `[Step 3]` 을 통과합니다. 나머지 스크립트(`install.sh` · `autoinstall.sh` · `update_harbor_config.sh` · `common.sh`)는 `100644` 이며 실행 비트가 필요 없습니다: `common.sh` 는 `install.sh` 가 `source` 하고, 나머지는 아래 3항처럼 **`bash <스크립트>` 형태로 실행**합니다(`autoinstall.sh` 도 내부에서 `bash install.sh` 로 호출합니다). `./install.sh` 처럼 직접 실행하고 싶다면 그 파일에만 `chmod +x` 하세요.
-3. `bash update_harbor_config.sh` 가 도메인·http 포트·https 여부를 입력받아 `harbor.yml` 을 만들고, `bash install.sh` 로 설치합니다. `bash autoinstall.sh` 는 두 단계를 한 번에 실행합니다. https 를 쓰려면 설치 전에 `compose/project_mng_service/harbor-v2.0.0/ssl/` 에 인증서를 둡니다. `install.sh` 재실행 시 기존 harbor 컨테이너를 `down -v` 로 내린 뒤 다시 올립니다.
+3. `bash update_harbor_config.sh` 가 도메인·http 포트·https 여부를 입력받아 `harbor.yml` 을 만들고, `bash install.sh` 로 설치합니다. `bash autoinstall.sh` 는 두 단계를 한 번에 실행합니다. 입력하는 경로(ssl·data volume·log)는 `/data` 처럼 일반 경로 그대로 입력합니다(이스케이프 불필요, 예전 `\/data` 입력도 허용). https 를 쓰려면 설치 전에 `compose/project_mng_service/harbor-v2.0.0/ssl/letsencrypt/live/<도메인>/{fullchain,privkey}.pem` 구조로 인증서를 둡니다 — `autoinstall.sh` 가 `ssl/` 의 내용을 입력한 ssl path 아래로 복사하고(`<ssl path>/letsencrypt/live/<도메인>/…`, 기본 `/etc` 는 root 권한 필요), `harbor.yml` 인증서 경로에 입력 도메인을 넣습니다. `install.sh` 재실행 시 기존 harbor 컨테이너를 `down -v` 로 내린 뒤 다시 올립니다. **설치는 root 로 실행합니다**(`sudo bash autoinstall.sh` / `sudo bash install.sh`, Harbor 공식 안내와 동일): `prepare` 가 `common/config/*/env` 를 root 소유 600 으로 만들기 때문에 일반 사용자로 실행하면 `[Step 4]` 에서 `open …/common/config/jobservice/env: permission denied` 로 멈춥니다. 이후 `docker-compose` 명령(`down`·`ps` 등)도 같은 폴더에서 `sudo` 로 실행합니다.
 4. **공존**: Harbor 는 자체 nginx 로 http 포트(기본 80)를 씁니다. 이 저장소의 웹 스택·master_service·단독 proxy 와 같은 호스트라면 **별도 호스트를 권장**하고, 같은 호스트라면 `update_harbor_config.sh` 에서 다른 http 포트를 지정한 뒤 앞단 nginx(예: master_service proxy conf)에서 그 포트로 프록시하세요.
 5. There are advanced information in [Harbor 2.0 Documentation](https://goharbor.io/docs/2.0.0/)
 
@@ -342,7 +343,7 @@ docker compose restart      # 기동 명령이 다시 돌며 이관한 DB 에 �
 
   5. master_service 의 openproject · jenkins proxy 는 생성기가 없습니다 — 인증서 발급 후 `config/web-server/nginx/php/proxy/<svc>/<svc>_proxy.conf` 에 `listen 443 ssl` 서버 블록을 직접 추가합니다(`config/web-server/nginx/php/sample_nginx_https.conf` 의 ssl 지시어 참고). OpenProject 는 `.env` 의 `OPENPROJECT_HTTPS=true` 로 바꿉니다.
 
-  6. Run `docker compose restart` in the compose folder (or `docker compose stop` / `docker compose start`). Do not use `docker compose down -v` — named volumes (SQLite `/data`, gitolite repositories) are deleted.
+  6. Apply the new conf in the compose folder: `docker compose exec webserver nginx -t && docker compose exec webserver nginx -s reload` (or restart only nginx: `docker compose restart webserver`). OpenProject 의 `OPENPROJECT_HTTPS` 를 바꿨다면 `docker compose up -d openproject` 로 그 컨테이너만 다시 만듭니다. 전체 `docker compose restart` 는 모든 서비스를 동시에 재시작하므로 app 이 내려가는 순간 nginx 가 떠 `[emerg] host not found in upstream` 으로 한 번 종료될 수 있습니다(자동 재기동) — 전체 재기동은 `docker compose stop` → `docker compose start` 를 쓰세요. Do not use `docker compose down -v` — named volumes (SQLite `/data`, gitolite repositories) are deleted.
 
   7. Certbot 갱신 cron 은 nginx 이미지 안에 내장되어 있습니다 (`docker/nginx/Dockerfile` 이 빌드 시 crontab 에 등록). 호스트에서 별도 `crontab` 설정은 **불필요** 합니다. 확인: `docker compose exec webserver crontab -l`.
 
