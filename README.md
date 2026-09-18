@@ -1,6 +1,6 @@
 # devspoon-startup-cloud-tizen
 
-Docker-based templates for a web stack (nginx + Django/PHP) and project-management solutions (OpenProject, Jenkins, Gitolite, Harbor). SmartThings/Bixby-integrated application servers are not provided (open-source development support discontinued).
+Docker-based templates for a web stack (nginx + Django/PHP) and project-management solutions (Plane, Jenkins, Gitea, Harbor). SmartThings/Bixby-integrated application servers are not provided (open-source development support discontinued).
 
 # Discontinuation of support for open source development
 
@@ -8,19 +8,19 @@ This project no longer offers open source development support for startup commer
 
 ## Project management solutions
 
-- **[OpenProject]** : Open source project management software to help you work on your project efficiently
+- **[Plane]** : Open source project management software (issues · cycles · modules) to help you work on your project efficiently
 
 - **[Jenkins]** : As one of the CI tools, CI (Continuous Integration) refers to continuous integration, which is an automated process for developers, and new code changes are automatically built and tested regularly to notify developers to solve problems that can occur when multiple developers develop simultaneously. Software that helps secure development stability and reliability
 
-- **[Gitolite]** : Configuration Management Tool. user can install git server software at own server
+- **[Gitea]** : Lightweight self-hosted git service — web UI, issues, pull requests, and git over SSH/HTTP
 
 - **[Harbor]** : The Private Docker Registry Server for businesses that store and distribute Docker Images
 
-- **[OpenProject(KR)]** : 프로젝트를 효율적으로 진행할 수 있도록 지원하는 오픈 소스 프로젝트 관리 소프트웨어
+- **[Plane]** : 이슈 · 사이클 · 모듈로 프로젝트를 효율적으로 진행할 수 있도록 지원하는 오픈 소스 프로젝트 관리 소프트웨어
 
 - **[Jenkins(KR)]** : CI 툴 중 하나로 CI (Continuous Integration)는 개발자를 위한 자동화 프로세스인 지속적인 통합을 말하며 새로운 코드 변경 사항들이 정기적으로 자동 빌드 및 테스트되어 개발자에게 알려줌으로 여러명의 개발자가 동시에 개발하며 발생할 수 있는 문제들을 해결하여 개발의 안정성 및 신뢰성을 확보할 수 있도록 지원하는 소프트웨어
 
-- **[Gitolite]** : 형상 관리 도구 혹은 버전관리 시스템으로 자체적으로 설치하고 운영할 수 있는 git 소프트웨어
+- **[Gitea]** : 자체 설치형 경량 git 서비스 — 웹 UI, 이슈, pull request, SSH/HTTP git 접근을 제공하는 git 소프트웨어
 
 - **[Harbor(KR)]** : Docker Image를 저장하고 분배하는 기업용 Private Docker Registry Server
 
@@ -30,15 +30,15 @@ This project no longer offers open source development support for startup commer
 
 - **User custom installation support** : You can selectively install only the desired solution at `compose/project_mng_service/<solution>` without having to install all the solutions. Run only one standalone service at a time (see [단독 서비스 동시 기동 규칙](#단독-서비스-동시-기동-규칙)).
 
-- **All-in-one combinations** : To run a web stack together with openproject, jenkins and gitolite, use one of the five files in `compose/master_service/` (see [master_service](#master_service--웹-스택--openproject--jenkins--gitolite)).
+- **All-in-one combinations** : To run a web stack together with Plane, Jenkins and Gitea, use one of the five files in `compose/master_service/` (see [master_service](#master_service--웹-스택--plane--jenkins--gitea)).
 
-- **Access web server and project management solutions with one nginx through nginx proxy** : In master_service, one nginx serves the web app and reverse-proxies openproject and jenkins by domain.
+- **Access web server and project management solutions with one nginx through nginx proxy** : In master_service, one nginx serves the web app and reverse-proxies Plane, Jenkins and Gitea by domain.
 
   ```
   Example
 
   test.com -> company website
-  open.test.com -> openproject solution
+  plane.test.com -> Plane solution
   jen.test.com -> jenkins solution
   ```
 
@@ -46,22 +46,22 @@ This project no longer offers open source development support for startup commer
 
 - **etc** :
 
-  - You can use ssh (port 2222) for direct access to gitolite.
+  - You can use ssh (port 2222) for git over SSH on Gitea.
   - Harbor is installed with its own installer scripts (see [Harbor](#harbor)).
 
 - **devspoon-web 에서 이식한 웹 스택** : `compose/web_service/` 에 5개 스택이 있습니다 — `nginx_gunicorn`, `nginx_uvicorn`, `nginx_uwsgi`, `nginx_daphne`(Python / Django 6, uv), `nginx_php`(PHP 8.4 전용). [Web stack & CI](#web-stack--ci) 참고.
 
 - **사용자 맞춤식 설치 지원** : 모든 솔루션을 설치할 필요 없이 `compose/project_mng_service/<solution>` 에서 원하는 솔루션만 선택적으로 설치할 수 있습니다. 단독 서비스는 한 번에 하나만 기동합니다([단독 서비스 동시 기동 규칙](#단독-서비스-동시-기동-규칙) 참고).
 
-- **올인원 조합** : 웹 스택과 openproject · jenkins · gitolite 를 함께 띄우려면 `compose/master_service/` 의 5개 파일 중 하나를 사용하세요([master_service](#master_service--웹-스택--openproject--jenkins--gitolite) 참고).
+- **올인원 조합** : 웹 스택과 Plane · Jenkins · Gitea 를 함께 띄우려면 `compose/master_service/` 의 5개 파일 중 하나를 사용하세요([master_service](#master_service--웹-스택--plane--jenkins--gitea) 참고).
 
-- **nginx의 proxy를 통해 하나의 nginx로 웹서버 및 프로젝트 관리 솔루션들에 접근 가능** : master_service 에서 nginx 하나가 웹 앱을 서비스하고 openproject · jenkins 를 도메인별로 리버스 프록시합니다.
+- **nginx의 proxy를 통해 하나의 nginx로 웹서버 및 프로젝트 관리 솔루션들에 접근 가능** : master_service 에서 nginx 하나가 웹 앱을 서비스하고 Plane · Jenkins · Gitea 를 도메인별로 리버스 프록시합니다.
 
   ```
   Example
 
   test.com -> company website
-  open.test.com -> openproject solution
+  plane.test.com -> Plane solution
   jen.test.com -> jenkins solution
   ```
 
@@ -69,7 +69,7 @@ This project no longer offers open source development support for startup commer
 
 - **기타** :
 
-  - gitolite 는 ssh(포트 2222)로 직접 접근합니다.
+  - Gitea 의 git over SSH 는 ssh(포트 2222)로 접근합니다.
   - Harbor 는 자체 설치 스크립트로 설치합니다([Harbor](#harbor) 참고).
 
 ## considerations
@@ -117,7 +117,7 @@ bash -c ". script/lib/django_secrets.sh && ensure_env_secrets $D/.env"
 
 - 값이 비었거나 옛 `CHANGE_ME_*` 인 비밀 키만 `openssl rand -hex` 무작위 값으로 채웁니다(`DJANGO_SECRET_KEY` 100 hex, `*_KEY_BASE` 128 hex, 그 외 64 hex). 이미 값이 있는 키는 바꾸지 않습니다.
 - 같은 폴더의 임시 파일에 쓴 뒤 교체하며, 값을 생성했으면 권한을 600 으로 좁힙니다(더 엄격하면 유지). openssl 이 없거나 실패하면 `FAIL` 로 끝나고 `.env` 내용은 바뀌지 않습니다.
-- **비밀이 아닌 자리표시자는 헬퍼가 채우지 않습니다 — 운영 전에 직접 입력하세요**: `FLOWER_ID`(`CHANGE_ME_FLOWER_USER`), master·openproject 의 `OPENPROJECT_HOST_NAME`(compose 에서 `OPENPROJECT_HOST__NAME` 으로 전달, proxy conf 의 `server_name` 과 동일), `SMTP_*`, `DJANGO_ALLOWED_HOSTS`(도메인 추가).
+- **비밀이 아닌 자리표시자는 헬퍼가 채우지 않습니다 — 운영 전에 직접 입력하세요**: `FLOWER_ID`(`CHANGE_ME_FLOWER_USER`), master·단독 plane 의 `PLANE_DOMAIN`·`PLANE_WEB_URL`·`PLANE_CORS_ALLOWED_ORIGINS`(proxy conf 의 `server_name` 과 동일), gitea 의 `GITEA_DOMAIN`·`GITEA_ROOT_URL`, `DJANGO_ALLOWED_HOSTS`(도메인 추가).
 - 호스트에서 `manage.py` 를 직접 실행할 때만 `www/django_sample` 의 `secrets.json` 이 필요합니다: `bash -c '. script/lib/django_secrets.sh && ensure_django_secrets'` (없을 때만 생성, 600). 컨테이너는 `DJANGO_SECRET_KEY` 환경변수를 씁니다.
 
 > **업그레이드 노트 — 이전 버전에서 쓰던 `.env` 를 유지하는 경우**: 옛 `.env` 에는 `DJANGO_SECRET_KEY` 줄이 없거나 `CHANGE_ME_*` 값이 남아 있을 수 있습니다. 위 헬퍼를 같은 `.env` 에 한 번 실행하면 같은 폴더 `docker-compose*.yml` 이 `:?` 로 요구하는 비밀 키(이름에 SECRET·PASSWORD·PWD 포함 또는 `_KEY_BASE` 로 끝남) 중 없는 키를 끝에 추가하고 `CHANGE_ME_*` 를 교체하며, 기존 값은 보존하고 권한을 600 으로 맞춥니다. `KEY=""` 처럼 따옴표로 둘러싼 빈 값은 채우지 않으니 먼저 `KEY=` 로 고치세요.
@@ -163,7 +163,7 @@ docker compose exec gunicorn-app chown www-data:www-data /data/django_sample.sql
 docker compose restart gunicorn-app   # 기동 명령이 다시 돌며 이관한 DB 에 미적용 migrate 반영 (app 만 — 전체 restart 는 nginx 기동 경합)
 ```
 
-> ⚠️ **`docker compose down -v` 는 `app-data` 볼륨, 즉 SQLite DB 를 삭제합니다.** 컨테이너만 내리려면 `docker compose stop` 을 쓰세요 (`down` 은 비권장, 특히 `-v`; 프로필 서비스는 §2 처럼 `--profile` 을 붙임). 백업: `docker compose cp gunicorn-app:/data/django_sample.sqlite3 ./backup.sqlite3`. master_service 의 gitolite 저장소 볼륨(`gitolite-repos`)도 `-v` 로 삭제됩니다.
+> ⚠️ **`docker compose down -v` 는 `app-data` 볼륨, 즉 SQLite DB 를 삭제합니다.** 컨테이너만 내리려면 `docker compose stop` 을 쓰세요 (`down` 은 비권장, 특히 `-v`; 프로필 서비스는 §2 처럼 `--profile` 을 붙임). 백업: `docker compose cp gunicorn-app:/data/django_sample.sqlite3 ./backup.sqlite3`. master_service 의 Plane 데이터 볼륨(`plane-pgdata`·`plane-uploads` 등)과 Gitea 저장소 볼륨(`gitea-data`)도 `-v` 로 삭제됩니다.
 
 ### 4. 이미지 이름 · 빌드 · uv
 
@@ -192,9 +192,9 @@ docker compose restart gunicorn-app   # 기동 명령이 다시 돌며 이관한
 - 실제 컨테이너를 띄우므로 호스트 80/443/5555 가 비어 있어야 합니다. 필요 도구: docker(Compose ≥ 2.17), uv, jq, curl, openssl, php-cli.
 - GitHub Actions(`.github/workflows/test.yml`)는 같은 스크립트를 실행합니다. 알림은 선택 — 저장소 secrets `SLACK_WEBHOOK_URL`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` 가 없으면 해당 알림을 건너뜁니다. 업로드 로그(`log/ci`, `log/test_run`)는 `script/lib/mask_secrets.sh` 로 비밀값을 마스킹한 뒤 올립니다.
 
-## master_service — 웹 스택 + openproject · jenkins · gitolite
+## master_service — 웹 스택 + Plane · Jenkins · Gitea
 
-`compose/master_service/` 의 5조합은 한 nginx(`webserver`) 뒤에 웹 스택과 openproject · jenkins · gitolite 를 함께 띄웁니다. `.env` 하나(`compose/master_service/.env-example`)를 공유합니다.
+`compose/master_service/` 의 5조합은 한 nginx(`webserver`) 뒤에 웹 스택과 Plane · Jenkins · Gitea 를 함께 띄웁니다. `.env` 하나(`compose/master_service/.env-example`)를 공유하고, Plane · Gitea 서비스 정의는 단독 스택과 같은 `compose/common/{plane-services,gitea-service}.yml` 을 `include:` 합니다(**Docker Compose ≥ 2.20**).
 
 | 파일 | 웹 스택 | 프로파일 |
 |---|---|---|
@@ -204,10 +204,10 @@ docker compose restart gunicorn-app   # 기동 명령이 다시 돌며 이관한
 | `docker-compose-daphne.yml` | daphne | `celery` |
 | `docker-compose-php.yml` | php 8.4 | `redis` (celery 없음) |
 
-모든 조합에 `openproject`(`openproject/openproject:17`) · `jenkins`(`jenkins/jenkins:lts-jdk21`) · `gitolite`(로컬 빌드, 호스트 2222) 가 포함됩니다.
+모든 조합에 **Plane**(`makeplane/plane-*`, 앱·DB·큐·오브젝트 저장소·내부 프록시 13 서비스) · `jenkins`(`jenkins/jenkins:lts-jdk21`) · **Gitea**(`gitea/gitea`, 호스트 2222 = git over SSH) 가 포함됩니다.
 
-1. **gitolite 관리자 공개키를 먼저 배치** — [Gitolite](#gitolite) 1단계. 키 없이 기동하면 gitolite 이미지 빌드가 실패합니다.
-2. **`.env` 생성** — `OPENPROJECT_SECRET_KEY_BASE` 도 헬퍼가 128 hex 로 생성합니다.
+1. **Plane · Gitea 는 사전 준비가 없습니다** — 관리자 계정은 기동 뒤에 만듭니다([Plane](#plane) 6 · [Gitea](#gitea) 4단계).
+2. **`.env` 생성** — Plane 비밀 키 5종도 헬퍼가 생성합니다(`include:` 한 `compose/common/plane-services.yml` 의 `${KEY:?}` 까지 훑습니다).
 
    ```bash
    D=compose/master_service
@@ -215,12 +215,13 @@ docker compose restart gunicorn-app   # 기동 명령이 다시 돌며 이관한
    bash -c ". script/lib/django_secrets.sh && ensure_env_secrets $D/.env"
    ```
 
-   이어서 `OPENPROJECT_HOST_NAME` · `FLOWER_ID` · `SMTP_*` 자리표시자를 직접 입력합니다.
+   이어서 `PLANE_DOMAIN` · `PLANE_WEB_URL` · `PLANE_CORS_ALLOWED_ORIGINS` · `GITEA_DOMAIN` · `GITEA_ROOT_URL` · `FLOWER_ID` 자리표시자를 직접 입력합니다.
 3. **proxy 샘플 복사** — webserver 가 `config/web-server/nginx/php/proxy/<svc>/` 를 `/etc/nginx/proxy.d/<svc>/` 로 읽기 전용 마운트하고, `nginx.conf` 가 `include /etc/nginx/proxy.d/*/*.conf;` 로 읽습니다. `conf.d` 로 복사하지 않습니다.
 
    ```bash
    P=config/web-server/nginx/php/proxy
-   cp "$P/openproject/openproject_proxy.conf.example" "$P/openproject/openproject_proxy.conf"   # server_name 수정
+   cp "$P/plane/plane_proxy.conf.example" "$P/plane/plane_proxy.conf"                           # server_name 수정
+   cp "$P/gitea/gitea_proxy.conf.example" "$P/gitea/gitea_proxy.conf"                           # server_name 수정
    cp "$P/jenkins/jenkins_proxy.conf.example" "$P/jenkins/jenkins_proxy.conf"                   # server_name 수정
    ```
 
@@ -233,54 +234,52 @@ docker compose restart gunicorn-app   # 기동 명령이 다시 돌며 이관한
    docker compose -f docker-compose-php.yml --profile redis up -d --build      # php 조합
    ```
 
-   > ⚠️ **pgdata 는 비워 두세요**: `compose/master_service/pgdata/` 도 저장소에 없고 첫 기동 시 생성됩니다 — 파일을 넣지 마세요. 자세한 내용은 [OpenProject](#openproject) 의 pgdata 주의를 참고하세요.
+   > ⚠️ **첫 기동은 Plane 마이그레이션 때문에 수 분 걸립니다**: `plane-migrator` 가 성공으로 끝난 뒤 `plane-api` 가 뜨고, 그 뒤에 `plane-proxy` 가 준비됩니다. Plane · Gitea 데이터는 named volume 이므로 호스트 폴더를 만들 필요가 없습니다(`docker compose down -v` 는 그 볼륨을 지웁니다).
 
 ## project_mng_service — 단독 서비스
 
 ### 단독 서비스 동시 기동 규칙
 
-- **단독 서비스는 한 번에 하나만 기동합니다.** `nginx_openproject` · `nginx_jenkins` 는 둘 다 호스트 80/443 을, `gitolite` 는 2222 를 쓰고, `openproject` · `jenkins` · `gitolite` 컨테이너 이름이 master_service 와 같습니다. 웹 스택(`compose/web_service`)·master_service 와도 동시에 띄울 수 없습니다.
+- **단독 서비스는 한 번에 하나만 기동합니다.** `nginx_plane` · `nginx_jenkins` · `gitea` 가 모두 호스트 80/443(또는 2222)을 쓰고, `plane-*` · `jenkins` · `gitea` 컨테이너 이름이 master_service 와 같습니다. 웹 스택(`compose/web_service`)·master_service 와도 동시에 띄울 수 없습니다.
 - **여러 서비스를 동시에 운영하려면 master_service 를 쓰세요.**
-- **단독 proxy 스택(`nginx_openproject` · `nginx_jenkins`)은 HTTP 전용입니다(80, TLS 없음).** 443 은 매핑돼 있지만 catch-all `default.conf` 가 TLS 핸드셰이크를 거부(`ssl_reject_handshake on`)할 뿐 서비스용 TLS 서버 블록이 없어, 로그인 자격증명이 80 으로 평문 전송됩니다. 공개망 운영은 앞단 TLS 종단(별도 리버스 프록시·LB) 뒤에 두거나, TLS 를 구성할 수 있는 master_service 를 쓰세요.
+- **단독 proxy 스택(`nginx_plane` · `nginx_jenkins` · `gitea`)은 HTTP 전용입니다(80, TLS 없음).** 443 은 매핑돼 있지만 catch-all `default.conf` 가 TLS 핸드셰이크를 거부(`ssl_reject_handshake on`)할 뿐 서비스용 TLS 서버 블록이 없어, 로그인 자격증명이 80 으로 평문 전송됩니다. 공개망 운영은 앞단 TLS 종단(별도 리버스 프록시·LB) 뒤에 두거나, TLS 를 구성할 수 있는 master_service 를 쓰세요.
 
 단독 proxy 스택 구조: nginx 가 `config/web-server/nginx/php/proxy/<svc>/` 서비스별 폴더를 `/etc/nginx/conf.d/` 로 읽기 전용 마운트하고, 그 폴더의 자리표시자 `default.conf` 자리에 catch-all `config/web-server/nginx/php/conf.d/default.conf` 를 덮어 마운트합니다. 복사본 `<svc>_proxy.conf` 가 없으면 모든 Host 에 444 로 응답하며 정상 기동합니다. 자리표시자 `default.conf` 는 편집·삭제하지 마세요(읽기 전용 마운트 지점).
 
-### OpenProject
+### Plane
 
-1. `.env` 생성 — `OPENPROJECT_SECRET_KEY_BASE` 가 비어 있으면 compose 가 기동을 거부합니다.
+1. `.env` 생성 — Plane 비밀 키 5종(`PLANE_SECRET_KEY` · `PLANE_LIVE_SERVER_SECRET_KEY` · `PLANE_DB_PASSWORD` · `PLANE_MQ_PASSWORD` · `PLANE_MINIO_PASSWORD`)이 비어 있으면 compose 가 기동을 거부합니다. 헬퍼가 `include:` 한 `compose/common/plane-services.yml` 의 키까지 찾아 채웁니다.
 
    ```bash
-   D=compose/project_mng_service/nginx_openproject
+   D=compose/project_mng_service/nginx_plane
    cp "$D/.env-example" "$D/.env"
    bash -c ". script/lib/django_secrets.sh && ensure_env_secrets $D/.env"
    ```
 
-2. OpenProject 17 필수 env: `SECRET_KEY_BASE`(= `.env` 의 `OPENPROJECT_SECRET_KEY_BASE`), `OPENPROJECT_HOST__NAME`(= `OPENPROJECT_HOST_NAME`, proxy conf 의 `server_name` 과 동일). 메일 발송은 `.env` 의 `EMAIL_DELIVERY_METHOD` · `SMTP_ADDRESS` · `SMTP_PORT` · `SMTP_DOMAIN` · `SMTP_USER_NAME` · `SMTP_PASSWORD` 를 사용하는 SMTP 서비스(예: [sendgrid], [mailgun]) 값으로 바꿉니다.
+2. 도메인 3개를 **같은 값**으로 직접 입력합니다(헬퍼가 채우지 않는 자리표시자): `PLANE_DOMAIN` · `PLANE_WEB_URL` · `PLANE_CORS_ALLOWED_ORIGINS`. proxy conf 의 `server_name` 과도 같아야 로그인·API·실시간 협업(WebSocket)이 모두 동작합니다. HTTPS 로 서비스하면 `PLANE_WEB_URL` · `PLANE_CORS_ALLOWED_ORIGINS` 를 `https://` 로 적습니다.
 
-   > ⚠️ **pgdata 업그레이드**: 이미지가 `openproject/openproject:17`(내장 PostgreSQL 17)입니다. 이전 버전(`openproject/community` 등)으로 만든 `pgdata/` 는 PostgreSQL 메이저 버전이 달라 그대로 기동할 수 없습니다. 기존 데이터가 있으면 먼저 백업하고 [OpenProject 공식 문서][OpenProject docs]의 업그레이드 절차를 따르세요.
+3. proxy 샘플 복사(저장소 루트): `P=config/web-server/nginx/php/proxy/plane; cp "$P/plane_proxy.conf.example" "$P/plane_proxy.conf"` 후 `server_name` 수정.
 
-   > ⚠️ **pgdata 는 비워 두세요**: `pgdata/` 는 저장소에 없고 첫 기동 시 Docker 가 만든 뒤 내장 PostgreSQL 이 초기화합니다. 폴더에 파일이 하나라도 있으면(`.gitkeep` 같은 점 파일 포함) `initdb` 가 `directory ... exists but is not empty` 로 실패해 컨테이너가 재시작을 반복합니다(nginx 502) — 파일을 넣지 마세요.
-   > 생성된 데이터는 컨테이너 postgres 사용자 소유(권한 700)라 호스트 계정으로 읽기·삭제할 수 없습니다. 백업·삭제는 서비스를 멈춘 뒤 컨테이너로 합니다. 백업 예(저장소 루트에서, 결과는 저장소 밖 `$HOME` 에 본인 소유 600 으로 저장 — DB 에 비밀번호 해시가 들어 있음):
-   >
-   > ```bash
-   > D=compose/project_mng_service/nginx_openproject   # master: D=compose/master_service
-   > (cd "$D" && docker compose stop openproject)       # master: docker compose -f docker-compose-<stack>.yml stop openproject
-   > if [ -n "$(docker ps -q -f name='^openproject$')" ]; then
-   >   echo "openproject 컨테이너가 실행 중 — 먼저 stop 하세요(stop 줄 오류 확인), 백업하지 않음"
-   > elif [ -d "$D/pgdata" ]; then
-   >   docker run --rm --mount type=bind,src="$PWD/$D/pgdata",dst=/d,readonly -v "$HOME":/b alpine \
-   >     sh -c "test -f /d/PG_VERSION || { echo 'PG_VERSION 없음 — 백업하지 않음' >&2; exit 1; }; umask 077; tar czf /b/openproject-pgdata.tgz.partial -C /d . && chown $(id -u):$(id -g) /b/openproject-pgdata.tgz.partial && chmod 600 /b/openproject-pgdata.tgz.partial && mv /b/openproject-pgdata.tgz.partial /b/openproject-pgdata.tgz || { rm -f /b/openproject-pgdata.tgz.partial; exit 1; }"
-   > elif [ -d "$D" ]; then
-   >   echo "$PWD/$D/pgdata 없음 — 첫 기동 전이면 백업할 데이터가 없습니다"
-   > else
-   >   echo "$PWD/$D 없음 — 저장소 루트에서 실행하세요"
-   > fi
-   > ```
-   >
-   > `stop` 줄이 오류 없이 끝났는지 먼저 확인하세요(예: master 에서 `-f` 를 빠뜨리면 실패합니다). 확인을 놓쳐도 `openproject` 컨테이너가 실행 중이면 백업을 거부합니다. 정상 종료가 아니라 모든 PostgreSQL 프로세스가 멈춘 뒤의 파일 복사본(crash-consistent)이므로, 복원하면 PostgreSQL 이 크래시 복구를 거쳐 기동합니다(`postmaster.pid` 가 들어 있어도 됩니다). 논리 백업(SQL)은 [OpenProject 공식 문서][OpenProject backup]의 백업 절차(`pg_dump`)를 참고하세요. 없는 경로를 bind 하면 Docker Desktop 등 일부 엔진은 `--mount` 여도 빈 폴더를 만들고 빈 아카이브가 성공한 것처럼 보입니다. 그래서 호스트에서 `pgdata` 폴더를 먼저 확인하고, 컨테이너 안에서 `PG_VERSION`(PostgreSQL 클러스터 표식)이 있을 때만 아카이브를 만듭니다. 아카이브는 `.partial` 에 쓴 뒤 성공했을 때만 기존 백업과 교체합니다. 삭제는 `tar tzf ~/openproject-pgdata.tgz` 로 내용을 확인한 뒤에만 하세요. 백업만 할 때는 `(cd "$D" && docker compose start openproject)`(master: `docker compose -f docker-compose-<stack>.yml start openproject`)로 다시 기동합니다.
+4. 기동(저장소 루트에서): `cd compose/project_mng_service/nginx_plane && docker compose up -d` (HTTP 전용 — 위 단독 서비스 규칙 참조). 첫 기동은 `plane-migrator` 가 DB 마이그레이션을 마친 뒤 `plane-api` 가 뜨므로 수 분 걸립니다.
 
-3. proxy 샘플 복사(저장소 루트): `P=config/web-server/nginx/php/proxy/openproject; cp "$P/openproject_proxy.conf.example" "$P/openproject_proxy.conf"` 후 `server_name` 수정.
-4. 기동(저장소 루트에서, `--build` 는 업그레이드나 Dockerfile 변경 뒤 nginx 이미지 재빌드): `cd compose/project_mng_service/nginx_openproject && docker compose up -d --build` (HTTP 전용 — 위 규칙 참조).
+5. 구성: 앱(`plane-web` · `plane-space` · `plane-admin` · `plane-api` · `plane-live` · `plane-worker` · `plane-beat-worker` · 1회성 `plane-migrator`) + 데이터(`plane-db` PostgreSQL 15 · `plane-redis` Valkey · `plane-mq` RabbitMQ · `plane-minio` S3 호환 저장소) + 스택 내부 프록시(`plane-proxy`, Caddy). 정의는 `compose/common/plane-services.yml` 한 곳에 있고 master_service 5조합이 같은 파일을 `include:` 합니다 — **Docker Compose ≥ 2.20** 이 필요합니다.
+
+6. 첫 계정: 브라우저로 도메인에 접속해 가입하면 그 계정이 인스턴스 첫 사용자가 됩니다. 인스턴스 관리(`/god-mode`)는 `plane-admin` 이 담당하며 같은 도메인의 `/god-mode/` 경로로 열립니다. 외부 가입을 막으려면 God Mode 의 Authentication 설정에서 sign-up 을 끕니다.
+
+7. > ⚠️ **비밀값을 바꾸면 기존 DB 볼륨과 어긋납니다**: `PLANE_DB_PASSWORD` 는 `plane-pgdata` 볼륨이 처음 만들어질 때의 PostgreSQL 사용자 비밀번호로 굳습니다. `.env` 만 새로 만들어(또는 `ensure_env_secrets` 를 빈 `.env` 에 다시 돌려) 값이 바뀌면 `plane-migrator` 가
+   > `FATAL: password authentication failed for user "plane"` 으로 실패하고 뒤따르는 앱 컨테이너가 전부 기동하지 못합니다. 값을 바꿀 때는 DB 안의 비밀번호도 함께 바꾸거나(`docker compose exec plane-db psql -U plane -c "ALTER USER plane PASSWORD '<새 값>';"`), 데이터를 버려도 되면 볼륨을 새로 만드세요(`docker compose down -v`).
+
+8. 데이터는 전부 named volume 입니다(`plane-pgdata` · `plane-uploads` · `plane-rabbitmq` · `plane-redisdata` · `plane-proxy-*` · `plane-logs-*`). 호스트 폴더 소유권 문제가 없는 대신 **`docker compose down -v` 를 쓰면 전부 삭제**됩니다 — 컨테이너만 내릴 때는 `stop` 을 쓰세요. 논리 백업 예:
+
+   ```bash
+   D=compose/project_mng_service/nginx_plane   # master: D=compose/master_service, 아래 명령에 -f docker-compose-<stack>.yml 추가
+   (cd "$D" && docker compose exec -T plane-db pg_dump -U plane -d plane) | gzip > ~/plane-db-$(date +%F).sql.gz
+   chmod 600 ~/plane-db-*.sql.gz   # 사용자·워크스페이스 데이터가 들어 있다
+   ```
+
+   첨부 파일은 `plane-minio` 볼륨(`plane-uploads`)에 있습니다: `docker run --rm -v plane-uploads:/d -v "$HOME":/b alpine tar czf /b/plane-uploads.tgz -C /d .`
+
+9. 더 자세한 내용은 [Plane 공식 문서][Plane docs] 참고. 이 저장소의 정의는 업스트림 `deployments/cli/community/docker-compose.yml` 을 기준으로, 호스트 포트를 열지 않고 앞단 nginx 뒤에 두도록 조정한 것입니다.
 
 ---
 
@@ -293,30 +292,41 @@ docker compose restart gunicorn-app   # 기동 명령이 다시 돌며 이관한
 
 ---
 
-### Gitolite
+### Gitea
 
-1. **관리자 공개키 선행 절차 (빌드 전에 필수)** — Dockerfile 이 `docker/gitolite/system` 폴더의 `client_user.pub` 를 git-manager 계정의 `authorized_keys` 로 이미지에 복사합니다. 이 파일은 저장소에 없고(gitignore) **키 없이 빌드하면 실패**합니다.
-
-   ```bash
-   ssh-keygen -t ed25519 -f ~/.ssh/gitolite_admin -C gitolite-admin   # 개인키는 호스트에만 보관
-   cp ~/.ssh/gitolite_admin.pub docker/gitolite/system/client_user.pub   # 저장소 루트에서
-   ```
-
-   그다음 빌드·기동합니다(단독 또는 master_service). 키를 바꾸면 `docker compose build --no-cache gitolite` 로 다시 빌드합니다(master_service 는 `-f docker-compose-<stack>.yml` 을 붙임).
-
-2. > ⚠️ **gitolite 이미지는 레지스트리에 푸시 금지(로컬 빌드 전용).** 관리자 공개키가 이미지에 구워지므로 이미지를 공유하면 키 구성이 노출되고, 받은 쪽이 같은 관리자 키 구성을 그대로 쓰게 됩니다.
-
-3. `.env` 생성 후 기동:
+1. `.env` 생성 후 도메인 입력(비밀값 없음):
 
    ```bash
-   D=compose/project_mng_service/gitolite
-   cp "$D/.env-example" "$D/.env"
-   cd "$D" && docker compose up -d --build     # ssh 포트 2222 (변경은 docker-compose.yml 의 ports), --build 는 키·Dockerfile 변경 뒤 재빌드
+   D=compose/project_mng_service/gitea
+   cp "$D/.env-example" "$D/.env"      # GITEA_DOMAIN · GITEA_ROOT_URL 을 실제 도메인으로 수정
    ```
 
-4. This docker makes 2 accounts, gitolite-creator and git-manager. gitolite is installed at gitolite-creator, and git-manager manages the gitolite system (add users, create repositories). 저장소는 named volume `gitolite-repos` 에 저장됩니다.
-5. Sample scripts are in /home/git-manager/sample-script in the container (`clone_admin.sh` — clone the admin repository, `add_user.sh` — add a new user).
-6. There are advanced information in [Gitolite Cookbook](https://gitolite.com/gitolite/cookbook)
+   `GITEA_ROOT_URL` 은 끝에 `/` 를 포함한 전체 URL 입니다(예: `http://git.example.com/`). HTTPS 로 서비스하면 `https://` 로 적습니다 — 웹훅·클론 URL·OAuth 리다이렉트가 이 값을 씁니다.
+
+2. proxy 샘플 복사(저장소 루트): `P=config/web-server/nginx/php/proxy/gitea; cp "$P/gitea_proxy.conf.example" "$P/gitea_proxy.conf"` 후 `server_name` 수정.
+
+3. 기동(저장소 루트에서): `cd compose/project_mng_service/gitea && docker compose up -d` — HTTP 는 앞단 nginx 가 프록시하고, git over SSH 는 컨테이너가 호스트 `2222`(`GITEA_SSH_PORT`)를 직접 게시합니다. 방화벽·보안 그룹에서 2222 를 열어야 외부에서 SSH 클론이 됩니다.
+
+4. 관리자 계정 생성(최초 1회, 설치 화면은 `INSTALL_LOCK` 으로 건너뜁니다):
+
+   ```bash
+   cd compose/project_mng_service/gitea      # master: cd compose/master_service, 아래 명령에 -f docker-compose-<stack>.yml 추가
+   docker compose exec -u git gitea gitea admin user create \
+     --username <id> --password '<pw>' --email <mail> --admin
+   ```
+
+   기본값은 `GITEA_DISABLE_REGISTRATION=true`(관리자만 계정 생성)입니다. 자체 가입을 허용하려면 `.env` 에서 `false` 로 바꾸세요.
+
+5. 사용: 웹 UI 에서 저장소를 만들고 SSH 공개키를 등록한 뒤
+
+   ```bash
+   git clone ssh://git@<도메인>:2222/<계정>/<저장소>.git      # SSH
+   git clone http://<도메인>/<계정>/<저장소>.git               # HTTP(개인 저장소는 토큰·비밀번호 인증)
+   ```
+
+6. 데이터는 named volume `gitea-data`(저장소·SQLite DB·SSH 호스트키) 하나에 모입니다. `docker compose down -v` 는 이 볼륨을 지웁니다. 백업: `docker compose exec -u git gitea gitea dump -c /data/gitea/conf/app.ini -f /tmp/gitea-dump.zip && docker compose cp gitea:/tmp/gitea-dump.zip ~/`. 외부 DB(PostgreSQL 등)를 쓰려면 `.env` 에 `GITEA__database__*` 를 추가합니다.
+
+7. 더 자세한 내용은 [Gitea 공식 문서][Gitea docs] 참고.
 
 ---
 
@@ -341,9 +351,9 @@ docker compose restart gunicorn-app   # 기동 명령이 다시 돌며 이관한
 
   4. Now create a conf file for https: run nginx_https_conf.sh located in config/web-server/nginx/<service>, then remove the http conf file from config/web-server/nginx/<service>/conf.d/.
 
-  5. master_service 의 openproject · jenkins proxy 는 생성기가 없습니다 — 인증서 발급 후 `config/web-server/nginx/php/proxy/<svc>/<svc>_proxy.conf` 에 `listen 443 ssl` 서버 블록을 직접 추가합니다(`config/web-server/nginx/php/sample_nginx_https.conf` 의 ssl 지시어 참고). OpenProject 는 `.env` 의 `OPENPROJECT_HTTPS=true` 로 바꿉니다.
+  5. master_service 의 plane · jenkins · gitea proxy 는 생성기가 없습니다 — 인증서 발급 후 `config/web-server/nginx/php/proxy/<svc>/<svc>_proxy.conf` 에 `listen 443 ssl` 서버 블록을 직접 추가합니다(`config/web-server/nginx/php/sample_nginx_https.conf` 의 ssl 지시어 참고). Plane 은 `.env` 의 `PLANE_WEB_URL`·`PLANE_CORS_ALLOWED_ORIGINS` 를, Gitea 는 `GITEA_ROOT_URL` 을 `https://` 로 바꿉니다.
 
-  6. Apply the new conf in the compose folder: `docker compose exec webserver nginx -t && docker compose exec webserver nginx -s reload` (or restart only nginx: `docker compose restart webserver`). OpenProject 의 `OPENPROJECT_HTTPS` 를 바꿨다면 `docker compose up -d openproject` 로 그 컨테이너만 다시 만듭니다. 전체 `docker compose restart` 는 모든 서비스를 동시에 재시작하므로 app 이 내려가는 순간 nginx 가 떠 `[emerg] host not found in upstream` 으로 한 번 종료될 수 있습니다(자동 재기동) — 전체 재기동은 `docker compose stop` → `docker compose start` 를 쓰세요. Do not use `docker compose down -v` — named volumes (SQLite `/data`, gitolite repositories) are deleted.
+  6. Apply the new conf in the compose folder: `docker compose exec webserver nginx -t && docker compose exec webserver nginx -s reload` (or restart only nginx: `docker compose restart webserver`). Plane 의 `PLANE_WEB_URL` 등이나 Gitea 의 `GITEA_ROOT_URL` 을 바꿨다면 `docker compose up -d plane-api plane-web plane-live` · `docker compose up -d gitea` 로 해당 컨테이너만 다시 만듭니다. 전체 `docker compose restart` 는 모든 서비스를 동시에 재시작하므로 app 이 내려가는 순간 nginx 가 떠 `[emerg] host not found in upstream` 으로 한 번 종료될 수 있습니다(자동 재기동) — 전체 재기동은 `docker compose stop` → `docker compose start` 를 쓰세요. Do not use `docker compose down -v` — named volumes (SQLite `/data`, Plane 데이터, Gitea 저장소) are deleted.
 
   7. Certbot 갱신 cron 은 nginx 이미지 안에 내장되어 있습니다 (`docker/nginx/Dockerfile` 이 빌드 시 crontab 에 등록). 호스트에서 별도 `crontab` 설정은 **불필요** 합니다. 확인: `docker compose exec webserver crontab -l`.
 
@@ -366,15 +376,14 @@ docker compose restart gunicorn-app   # 기동 명령이 다시 돌며 이관한
 <!-- Markdown link & img dfn's -->
 
 [devspoon-web]: https://github.com/devspoons/devspoon-web
-[OpenProject(KR)]: http://wiki.webnori.com/display/pms/Open+Project+7
 [Jenkins(KR)]: https://jjeongil.tistory.com/810
 [Harbor(KR)]: https://engineering.linecorp.com/ko/blog/harbor-for-private-docker-registry/
 [mailgun]: https://www.mailgun.com/
 [sendgrid]: https://sendgrid.com/
-[OpenProject]: https://www.openproject.org/docs/user-guide/wiki/
-[OpenProject docs]: https://www.openproject.org/docs/installation-and-operations/operation/upgrading/#compose-based-installation
-[OpenProject backup]: https://www.openproject.org/docs/installation-and-operations/operation/backing-up/#docker-based-installation
+[Plane]: https://plane.so/
+[Plane docs]: https://developers.plane.so/self-hosting/overview
 [Jenkins]: https://en.wikipedia.org/wiki/Jenkins_(software)
-[Gitolite]: https://wiki.archlinux.org/index.php/Gitolite
+[Gitea]: https://about.gitea.com/
+[Gitea docs]: https://docs.gitea.com/installation/install-with-docker
 [Harbor]: https://en.wikipedia.org/wiki/Harbor
 [bluebamus.github.io]: https://bluebamus.github.io
