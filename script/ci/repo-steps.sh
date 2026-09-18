@@ -118,5 +118,38 @@ if [ -e "$ROOT/www/smart_mirror_rest" ]; then fail "www/smart_mirror_rest 잔존
 echo "### 추적 가상환경 0 (CT-07) ###"
 n=$(git -C "$ROOT" ls-files 2>/dev/null | grep -c '/site-packages/')
 [ "$n" -eq 0 ] && echo "  [PASS] 0" || fail "추적 site-packages 파일 $n"
+echo "### jenkins_home 소유권 — jenkins-init(root 1회 chown 1000) 뒤 jenkins 기동, 호스트 uid 가 1000 이 아니어도 재시작 루프 없음 (LIVE-R1-JENKINS) ###"
+for f in "$ROOT"/compose/master_service/docker-compose-*.yml "$ROOT"/compose/project_mng_service/nginx_jenkins/docker-compose.yml; do
+    j=$(awk '/^  jenkins-init:$/{f=1;next} f&&/^  [a-z]/{f=0} f' "$f")
+    k=$(awk '/^  jenkins:$/{f=1;next} f&&/^  [a-z]/{f=0} f' "$f")
+    if grep -q 'user: "0:0"' <<<"$j" && grep -qF 'entrypoint: ["chown", "1000:1000", "/var/jenkins_home"]' <<<"$j" && grep -q 'restart: "no"' <<<"$j" \
+        && grep -A1 'jenkins-init:' <<<"$k" | grep -q 'condition: service_completed_successfully'; then
+        echo "  [PASS] ${f#$ROOT/} jenkins-init → jenkins"; else fail "${f#$ROOT/} jenkins-init 없음 또는 jenkins 가 완료 대기 안 함"; fi
+done
+
+echo "### Harbor 설정 생성기 — 일반 경로·특수문자 입력, 인증서 경로에 입력 도메인 (LIVE-R1-HARBOR) ###"
+HB="$ROOT/compose/project_mng_service/harbor-v2.0.0"
+if grep -q 'cococok' "$HB/sample-harbor.yml"; then fail "sample-harbor.yml 에 고정 도메인 잔존"; else echo "  [PASS] sample-harbor.yml 고정 도메인 없음"; fi
+for g in update_harbor_config.sh autoinstall.sh; do
+    w="$TMPD/hb-$g"; mkdir -p "$w"; cp "$HB/update_harbor_config.sh" "$HB/sample-harbor.yml" "$w/"
+    # autoinstall.sh 는 설치 전까지(harbor.yml 생성)만 같은 입력 처리 — 생성부만 잘라 검사
+    sed '/^echo "created a harbor.yml successfully!!!"/,$d' "$HB/$g" > "$w/gen.sh"
+    ( cd "$w" && printf 'ex.test\n8080\ny\n8443\n/opt/my ssl\nA&b/c\\d\ndb pw\n/srv/h data\n\\/var\\/log\\/hb\n' | bash gen.sh >/dev/null 2>&1 )
+    y="$w/harbor.yml"
+    if [ -f "$y" ] && grep -qx 'hostname: ex.test' "$y" && grep -qx '  port: 8080' "$y" && grep -qx '  port: 8443' "$y" \
+        && grep -qx '  certificate: /opt/my ssl/letsencrypt/live/ex.test/fullchain.pem' "$y" \
+        && grep -qx '  private_key: /opt/my ssl/letsencrypt/live/ex.test/privkey.pem' "$y" \
+        && grep -qxF 'harbor_admin_password: A&b/c\d' "$y" && grep -qx '  password: db pw' "$y" \
+        && grep -qx 'data_volume: /srv/h data ' "$y" && grep -qx '    location: /var/log/hb' "$y"; then
+        echo "  [PASS] $g 생성 harbor.yml (경로·특수문자·레거시 \\/ 입력·도메인 인증서 경로)"
+    else fail "$g 생성 harbor.yml 불일치: $(grep -E '^hostname|certificate:|harbor_admin_password: [^H]|^  password: [^r]|data_volume: /|location: /' "$y" 2>/dev/null | tr '\n' ';')"; fi
+done
+if grep -qF 'cp -rf ssl/. "$sslpath/"' "$HB/autoinstall.sh"; then echo "  [PASS] autoinstall ssl 내용을 <ssl path>/ 아래로 복사"; else fail "autoinstall ssl 복사 경로"; fi
+
+echo "### gitolite sample-script 비대화형 — git-manager known_hosts 에 localhost 호스트 키 등록 (LIVE-R2-GITOLITE) ###"
+if grep -qF '/etc/ssh/ssh_host_*_key.pub; do echo "localhost' "$ROOT/docker/gitolite/Dockerfile" \
+    && awk '/known_hosts/{k=NR} /chown git-manager:git-manager/{c=NR} END{exit !(k && c && k<c)}' "$ROOT/docker/gitolite/Dockerfile"; then
+    echo "  [PASS] Dockerfile known_hosts 등록(소유권 정리 전)"; else fail "gitolite Dockerfile — localhost known_hosts 미등록 또는 chown 뒤"; fi
+
 echo "=== RESULT: FAILS=$FAILS ==="
 [ "$FAILS" -eq 0 ] || exit 1
