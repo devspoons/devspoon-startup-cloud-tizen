@@ -305,7 +305,7 @@ docker compose restart gunicorn-app   # 기동 명령이 다시 돌며 이관한
 
 2. proxy 샘플 복사(저장소 루트): `P=config/web-server/nginx/php/proxy/gitea; cp "$P/gitea_proxy.conf.example" "$P/gitea_proxy.conf"` 후 `server_name` 수정.
 
-3. 기동(저장소 루트에서): `cd compose/project_mng_service/gitea && docker compose up -d` — HTTP 는 앞단 nginx 가 프록시하고, git over SSH 는 컨테이너가 호스트 `2222`(`GITEA_SSH_PORT`)를 직접 게시합니다. 방화벽·보안 그룹에서 2222 를 열어야 외부에서 SSH 클론이 됩니다.
+3. 기동(저장소 루트에서): `cd compose/project_mng_service/gitea && docker compose up -d` — HTTP 는 앞단 nginx 가 프록시하고, git over SSH 는 컨테이너가 호스트 `2222`(`GITEA_SSH_PORT`)를 직접 게시합니다. 방화벽·보안 그룹에서 2222 를 열어야 외부에서 SSH 클론이 됩니다 — Docker 가 게시한 포트는 호스트 iptables 의 INPUT 체인을 거치지 않으므로, 호스트 방화벽만 열고 **클라우드 보안 그룹**(예: OCI VCN 보안 목록 · AWS 보안 그룹)을 빠뜨리면 `10.x` 사설 IP 로는 되는데 공인 도메인으로는 timeout 이 납니다.
 
 4. 관리자 계정 생성(최초 1회, 설치 화면은 `INSTALL_LOCK` 으로 건너뜁니다):
 
@@ -378,8 +378,6 @@ docker compose restart gunicorn-app   # 기동 명령이 다시 돌며 이관한
 [devspoon-web]: https://github.com/devspoons/devspoon-web
 [Jenkins(KR)]: https://jjeongil.tistory.com/810
 [Harbor(KR)]: https://engineering.linecorp.com/ko/blog/harbor-for-private-docker-registry/
-[mailgun]: https://www.mailgun.com/
-[sendgrid]: https://sendgrid.com/
 [Plane]: https://plane.so/
 [Plane docs]: https://developers.plane.so/self-hosting/overview
 [Jenkins]: https://en.wikipedia.org/wiki/Jenkins_(software)
