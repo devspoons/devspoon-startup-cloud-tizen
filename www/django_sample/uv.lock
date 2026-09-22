@@ -1,6 +1,10 @@
 version = 1
 revision = 3
 requires-python = ">=3.14"
+resolution-markers = [
+    "platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
+    "platform_python_implementation != 'PyPy' or sys_platform != 'win32'",
+]
 
 [[package]]
 name = "amqp"
@@ -46,24 +50,27 @@ wheels = [
 
 [[package]]
 name = "autobahn"
-version = "25.12.2"
+version = "26.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cbor2" },
+    { name = "cbor2", version = "5.9.0", source = { registry = "https://pypi.org/simple" }, marker = "platform_python_implementation == 'PyPy' and sys_platform == 'win32'" },
+    { name = "cbor2", version = "6.1.1", source = { registry = "https://pypi.org/simple" }, marker = "platform_python_implementation != 'PyPy' or sys_platform != 'win32'" },
     { name = "cffi" },
     { name = "cryptography" },
     { name = "hyperlink" },
     { name = "msgpack", marker = "platform_python_implementation == 'CPython'" },
-    { name = "py-ubjson" },
     { name = "txaio" },
     { name = "u-msgpack-python", marker = "platform_python_implementation != 'CPython'" },
     { name = "ujson" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/54/d5/9adf0f5b9eb244e58e898e9f3db4b00c09835ef4b6c37d491886e0376b4f/autobahn-25.12.2.tar.gz", hash = "sha256:754c06a54753aeb7e8d10c5cbf03249ad9e2a1a32bca8be02865c6f00628a98c", size = 13893652, upload-time = "2025-12-15T11:13:19.086Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/de/73/f109f563c27e048e45d135d81af19e6ca391e24905550b06bd1c9d674c57/autobahn-26.7.1.tar.gz", hash = "sha256:c6949a2c6eb95fb1c218837dbda0a59abbbebafb8b11098551c01a7061dfd245", size = 14056542, upload-time = "2026-07-15T19:14:01.246Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/54/b7/0a0e3ecb2af7e452f5f359d19bdc647cbc8658f3f498bfa3bf8545cf4768/autobahn-25.12.2-cp314-cp314-macosx_15_0_arm64.whl", hash = "sha256:c840ee136bfaf6560467160129b0b25a0e33c9a51e2b251e98c5474f27583915", size = 1960463, upload-time = "2025-12-15T11:13:10.183Z" },
-    { url = "https://files.pythonhosted.org/packages/19/8b/4215ac49d6b793b592fb08698f3a0e21a59eb3520be7f7ed288fcb52d919/autobahn-25.12.2-cp314-cp314-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:9abda5cf817c0f8a19a55a67a031adf2fc70ed351719b5bd9e6fa0f5f4bc8f89", size = 2225590, upload-time = "2025-12-15T11:13:11.367Z" },
-    { url = "https://files.pythonhosted.org/packages/f6/58/e498821606db57305c8f3c26d9b28fd73e4e0583a1f48330df500721c418/autobahn-25.12.2-cp314-cp314-win_amd64.whl", hash = "sha256:18b12e8af7fc115487715afa10b3f5b5a4b5989bebbe05b71722cf9fce7b1bfb", size = 2184111, upload-time = "2025-12-15T11:13:12.461Z" },
+    { url = "https://files.pythonhosted.org/packages/51/3e/200471878093a502f8e8078c1ca19fd82acc68ae9ac363e395170da6dbe2/autobahn-26.7.1-cp314-cp314-macosx_15_0_arm64.whl", hash = "sha256:f3d1be925e3fb33fff5280c1bd02027047519812c400d3efa5477d3968686c94", size = 1987070, upload-time = "2026-07-15T19:13:47.112Z" },
+    { url = "https://files.pythonhosted.org/packages/61/d1/704f881fd2c52b056dc0f14e6d0d640b1f3ff43f3b84cf85d3631e3243f4/autobahn-26.7.1-cp314-cp314-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:44f8094b0c0fa29a4963ce12130b7932469f89afa0242ff858d2b26541a81005", size = 2082939, upload-time = "2026-07-15T19:13:48.569Z" },
+    { url = "https://files.pythonhosted.org/packages/a8/27/84e76aec7abbcb502d4cd34ef5c859eaa19a3b707cda68ab7ce68478dd92/autobahn-26.7.1-cp314-cp314-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:a0fcf9c3ff6b9b2bc85d6e1814a94d1d941d62f7df36d350b523d77df85d66ea", size = 2254983, upload-time = "2026-07-15T19:13:49.802Z" },
+    { url = "https://files.pythonhosted.org/packages/e6/81/a810732a10342c5d6b90d19f83fa2bc9b6126e7c0cda7c4df867e311aa2e/autobahn-26.7.1-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:4f82e5a113f6c1ff14cec99aa411f7da8fceec3dcd4647d7ebdfc0278811e14d", size = 3174295, upload-time = "2026-07-15T19:13:51.227Z" },
+    { url = "https://files.pythonhosted.org/packages/a6/c6/4886fdaecfeda013e085288a9d83bad6f1ded9995b8088ca933d9ec37201/autobahn-26.7.1-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:919309cbe41b28b0a3028e7c6fed52aca9fd21639619f372d3270c44341b6bdc", size = 3403713, upload-time = "2026-07-15T19:13:52.744Z" },
+    { url = "https://files.pythonhosted.org/packages/42/08/0106af17fcbe65a85040a8d98015bdcf2ef68144e12df500a72b91a5873e/autobahn-26.7.1-cp314-cp314-win_amd64.whl", hash = "sha256:354298aa0ab79861578f45f5bf543e4757c32070ff801282beda80c6c4f2a41e", size = 2206827, upload-time = "2026-07-15T19:13:54.499Z" },
 ]
 
 [[package]]
@@ -86,8 +93,25 @@ wheels = [
 
 [[package]]
 name = "cbor2"
+version = "5.9.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/bd/cb/09939728be094d155b5d4ac262e39877875f5f7e36eea66beb359f647bd0/cbor2-5.9.0.tar.gz", hash = "sha256:85c7a46279ac8f226e1059275221e6b3d0e370d2bb6bd0500f9780781615bcea", size = 111231, upload-time = "2026-03-22T15:56:50.638Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/43/d1/3533a697e5842fff7c2f64912eb251f8dcab3a8b5d88e228d6eebc3b5021/cbor2-5.9.0-cp314-cp314-win_amd64.whl", hash = "sha256:86baf870d4c0bfc6f79de3801f3860a84ab76d9c8b0abb7f081f2c14c38d79d3", size = 71940, upload-time = "2026-03-22T15:56:38.366Z" },
+    { url = "https://files.pythonhosted.org/packages/ff/e2/c6ba75f3fb25dfa15ab6999cc8709c821987e9ed8e375d7f58539261bcb9/cbor2-5.9.0-cp314-cp314-win_arm64.whl", hash = "sha256:7221483fad0c63afa4244624d552abf89d7dfdbc5f5edfc56fc1ff2b4b818975", size = 67639, upload-time = "2026-03-22T15:56:39.39Z" },
+    { url = "https://files.pythonhosted.org/packages/42/ff/b83492b096fbef26e9cb62c1a4bf2d3cef579ea7b33138c6c37c4ae66f67/cbor2-5.9.0-py3-none-any.whl", hash = "sha256:27695cbd70c90b8de5c4a284642c2836449b14e2c2e07e3ffe0744cb7669a01b", size = 24627, upload-time = "2026-03-22T15:56:48.847Z" },
+]
+
+[[package]]
+name = "cbor2"
 version = "6.1.1"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "platform_python_implementation != 'PyPy' or sys_platform != 'win32'",
+]
 sdist = { url = "https://files.pythonhosted.org/packages/be/db/810437bcfe13cf5e09b68bad1ce57c8fa04ca9272c68946bbf2f4fa522c8/cbor2-6.1.1.tar.gz", hash = "sha256:6f0644869e0fdcd6f3874330b8f1cebd009f33191de43acf609dc2409cd362c4", size = 86297, upload-time = "2026-05-14T10:57:42.231Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/aa/74/d2d6e0e3da305a625d710a932080bf70f390c867dce73bd35ca6cd5a8d10/cbor2-6.1.1-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:86c65976e9e69154700ea5a447013f37ff8cb76431adf9df3ebbabe341b68b06", size = 407425, upload-time = "2026-05-14T10:57:17.814Z" },
@@ -562,12 +586,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/a1/96/06e01a7b38dce6fe1
 wheels = [
     { url = "https://files.pythonhosted.org/packages/84/03/0d3ce49e2505ae70cf43bc5bb3033955d2fc9f932163e84dc0779cc47f48/prompt_toolkit-3.0.52-py3-none-any.whl", hash = "sha256:9aac639a3bbd33284347de5ad8d68ecc044b91a762dc39b7c21095fcd6a19955", size = 391431, upload-time = "2025-08-27T15:23:59.498Z" },
 ]
-
-[[package]]
-name = "py-ubjson"
-version = "0.16.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/1d/c7/28220d37e041fe1df03e857fe48f768dcd30cd151480bf6f00da8713214a/py-ubjson-0.16.1.tar.gz", hash = "sha256:b9bfb8695a1c7e3632e800fb83c943bf67ed45ddd87cd0344851610c69a5a482", size = 50316, upload-time = "2020-04-18T15:05:57.698Z" }
 
 [[package]]
 name = "pycparser"
