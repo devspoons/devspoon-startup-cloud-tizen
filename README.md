@@ -1,113 +1,83 @@
 # devspoon-startup-cloud-tizen
 
-Docker-based templates for a web stack (nginx + Django/PHP) and project-management solutions (Plane, Jenkins, Gitea, Harbor). SmartThings/Bixby-integrated application servers are not provided (open-source development support discontinued).
+**[English](README.md)** · [한국어](README-kr.md)
 
-# Discontinuation of support for open source development
+Docker-based templates for a web stack (nginx + Django / PHP) and project-management solutions — Plane, Jenkins, Gitea and Harbor. SmartThings / Bixby-integrated application servers are not provided.
 
-This project no longer offers open source development support for startup commercial development and for security reasons.
+## Discontinuation of support for open source development
+
+This project no longer offers open source development support, for startup commercial development and for security reasons.
+
+The configuration shipped in this repository is still complete and verified end to end — only new open source development support has stopped.
 
 ## Project management solutions
 
-- **[Plane]** : Open source project management software (issues · cycles · modules) to help you work on your project efficiently
+These are the four solutions this repository can install. Follow the links for the full description, architecture and installation steps of each.
 
-- **[Jenkins]** : As one of the CI tools, CI (Continuous Integration) refers to continuous integration, which is an automated process for developers, and new code changes are automatically built and tested regularly to notify developers to solve problems that can occur when multiple developers develop simultaneously. Software that helps secure development stability and reliability
+| Solution | What it does | Containers | Install method | Details (upstream repository) |
+|---|---|---|---|---|
+| **[Plane](#plane)** | Project management — issues · cycles · modules | 13 | compose (standalone / all-in-one) | [makeplane/plane](https://github.com/makeplane/plane) |
+| **[Jenkins](#jenkins)** | CI — automated build · test · deploy | 2 | compose (standalone / all-in-one) | [jenkinsci/jenkins](https://github.com/jenkinsci/jenkins) |
+| **[Gitea](#gitea)** | Self-hosted git service | 1 | compose (standalone / all-in-one) | [go-gitea/gitea](https://github.com/go-gitea/gitea) |
+| **[Harbor](#harbor)** | Private Docker Registry | created by installer | **its own installer** (separate host recommended) | [goharbor/harbor](https://github.com/goharbor/harbor) |
 
-- **[Gitea]** : Lightweight self-hosted git service — web UI, issues, pull requests, and git over SSH/HTTP
-
-- **[Harbor]** : The Private Docker Registry Server for businesses that store and distribute Docker Images
-
-- **[Plane]** : 이슈 · 사이클 · 모듈로 프로젝트를 효율적으로 진행할 수 있도록 지원하는 오픈 소스 프로젝트 관리 소프트웨어
-
-- **[Jenkins(KR)]** : CI 툴 중 하나로 CI (Continuous Integration)는 개발자를 위한 자동화 프로세스인 지속적인 통합을 말하며 새로운 코드 변경 사항들이 정기적으로 자동 빌드 및 테스트되어 개발자에게 알려줌으로 여러명의 개발자가 동시에 개발하며 발생할 수 있는 문제들을 해결하여 개발의 안정성 및 신뢰성을 확보할 수 있도록 지원하는 소프트웨어
-
-- **[Gitea]** : 자체 설치형 경량 git 서비스 — 웹 UI, 이슈, pull request, SSH/HTTP git 접근을 제공하는 git 소프트웨어
-
-- **[Harbor(KR)]** : Docker Image를 저장하고 분배하는 기업용 Private Docker Registry Server
+Plane, Jenkins and Gitea can run **together** behind a single nginx (→ [all-in-one startup](#all-in-one-startup--master_service-one-compose-file-for-everything)), or you can run just **one** of them at a time (→ [standalone](#project_mng_service--standalone-installation)).
 
 ## Features
 
-- **Web stacks ported from devspoon-web** : `compose/web_service/` has five stacks — `nginx_gunicorn`, `nginx_uvicorn`, `nginx_uwsgi`, `nginx_daphne` (Python / Django 6, uv) and `nginx_php` (PHP 8.4 only). See [Web stack & CI](#web-stack--ci).
+- **Web stacks ported from devspoon-web** — `compose/web_service/` has five stacks: `nginx_gunicorn`, `nginx_uvicorn`, `nginx_uwsgi`, `nginx_daphne` (Python / Django 6, uv) and `nginx_php` (PHP 8.4 only). See [Web stack & CI](#web-stack--ci).
 
-- **User custom installation support** : You can selectively install only the desired solution at `compose/project_mng_service/<solution>` without having to install all the solutions. Run only one standalone service at a time (see [단독 서비스 동시 기동 규칙](#단독-서비스-동시-기동-규칙)).
+- **Install only what you need** — pick a single solution under `compose/project_mng_service/<solution>` instead of installing all of them. Run only one standalone service at a time (see [Standalone concurrency rules](#standalone-concurrency-rules)).
 
-- **All-in-one combinations** : To run a web stack together with Plane, Jenkins and Gitea, use one of the five files in `compose/master_service/` (see [master_service](#master_service--웹-스택--plane--jenkins--gitea)).
+- **All-in-one combinations** — to run a web stack together with Plane, Jenkins and Gitea, use one of the five files in `compose/master_service/` (see [all-in-one startup](#all-in-one-startup--master_service-one-compose-file-for-everything)).
 
-- **Access web server and project management solutions with one nginx through nginx proxy** : In master_service, one nginx serves the web app and reverse-proxies Plane, Jenkins and Gitea by domain.
+- **One nginx reverse-proxies everything** — in master_service a single nginx serves the web app and reverse-proxies Plane, Jenkins and Gitea by domain.
 
   ```
   Example
 
-  test.com -> company website
-  plane.test.com -> Plane solution
-  jen.test.com -> jenkins solution
+  test.com        -> company website
+  plane.test.com  -> Plane
+  jen.test.com    -> Jenkins
+  git.test.com    -> Gitea
   ```
 
-- **Secret separation (`.env-example`)** : Every compose folder ships a tracked `.env-example`, while the actual `.env` is gitignored. Copy it to `.env`, then generate the empty secrets with `script/lib/django_secrets.sh` (`ensure_env_secrets`); never commit the live file. `${VAR:?}` checks in the compose files fail-fast if a required secret is missing.
+- **Secrets kept out of git (`.env-example`)** — every compose folder ships a tracked `.env-example` while the real `.env` is gitignored. Copy it to `.env`, generate the empty secrets with `script/lib/django_secrets.sh` (`ensure_env_secrets`), and never commit the live file. The `${VAR:?}` checks in the compose files fail fast when a required secret is missing.
 
-- **etc** :
+- **Other**
 
-  - You can use ssh (port 2222) for git over SSH on Gitea.
+  - Gitea serves git over SSH on port 2222.
   - Harbor is installed with its own installer scripts (see [Harbor](#harbor)).
 
-- **devspoon-web 에서 이식한 웹 스택** : `compose/web_service/` 에 5개 스택이 있습니다 — `nginx_gunicorn`, `nginx_uvicorn`, `nginx_uwsgi`, `nginx_daphne`(Python / Django 6, uv), `nginx_php`(PHP 8.4 전용). [Web stack & CI](#web-stack--ci) 참고.
+## Considerations
 
-- **사용자 맞춤식 설치 지원** : 모든 솔루션을 설치할 필요 없이 `compose/project_mng_service/<solution>` 에서 원하는 솔루션만 선택적으로 설치할 수 있습니다. 단독 서비스는 한 번에 하나만 기동합니다([단독 서비스 동시 기동 규칙](#단독-서비스-동시-기동-규칙) 참고).
+- **Development-oriented docker service** — a good fit for startups and new-service teams that change and test things often.
 
-- **올인원 조합** : 웹 스택과 Plane · Jenkins · Gitea 를 함께 띄우려면 `compose/master_service/` 의 5개 파일 중 하나를 사용하세요([master_service](#master_service--웹-스택--plane--jenkins--gitea) 참고).
+- **Aimed at plain servers, not AWS / GCM** — this project targets servers you operate yourself and general server hosting. Cloud integration (AWS, GCM and so on) is planned.
 
-- **nginx의 proxy를 통해 하나의 nginx로 웹서버 및 프로젝트 관리 솔루션들에 접근 가능** : master_service 에서 nginx 하나가 웹 앱을 서비스하고 Plane · Jenkins · Gitea 를 도메인별로 리버스 프록시합니다.
-
-  ```
-  Example
-
-  test.com -> company website
-  plane.test.com -> Plane solution
-  jen.test.com -> jenkins solution
-  ```
-
-- **비밀값 분리(`.env-example`)** : 모든 compose 폴더에 추적되는 `.env-example` 이 있고 실제 `.env` 는 gitignore 됩니다. `.env` 로 복사한 뒤 `script/lib/django_secrets.sh`(`ensure_env_secrets`)로 빈 비밀값을 생성하고, 실제 파일은 커밋하지 마세요. 필수 비밀값이 없으면 compose 의 `${VAR:?}` 검사가 기동을 거부합니다.
-
-- **기타** :
-
-  - Gitea 의 git over SSH 는 ssh(포트 2222)로 접근합니다.
-  - Harbor 는 자체 설치 스크립트로 설치합니다([Harbor](#harbor) 참고).
-
-## considerations
-
-- **Development-oriented docker service** : This open source is designed for focused on development-oriented rather than perfect docker container distribution and is suitable for startups or new service development teams with frequent initial modifications and tests.
-
-- **Orchestration not supported** : In the future, we plan to interoperate with cloud services such as AWS and GCM
-
-- **this open-source considers generic servers that are not support AWS, GCM** : This open source is intended to be installed and operated on a server that is directly operated, and on general server hosting, and plans to integrate with cloud services such as AWS and GCM in the future
-
-- **Requirements** : Docker Engine with the Compose plugin (`docker compose`, **≥ 2.17** for the Python app image builds). Legacy `docker-compose` (v1) commands are not used except by the bundled Harbor installer.
-
-- **개발 중심적 docker 서비스** : 이 오픈소스는 완전한 docker container의 배포가 아닌 개발 중심적으로 설계되었으며 초기 수정과 테스트가 빈번한 스타트업 혹은 신규 서비스 개발팀에게 적합합니다.
-- **오케스트레이션 미지원** : 앞으로 AWS, GCM 등의 Cloud 서비스와 연동할 계획이며 이후 오캐스트레이션이 지원될 예정입니다.
-- **AWS, GCM 기반이 아닌 일반 서버 고려** : 이 오픈소스는 직접 운용하고있는 서버, 일반적인 서버 호스팅에서 설치하여 운영하는 것을 목적으로 하고 있으며 앞으로 단계적으로 AWS, GCM 등의 Cloud 서비스와 연동할 계획입니다.
-- **요구 사항** : Compose 플러그인이 있는 Docker Engine(`docker compose`, Python 앱 이미지 빌드는 **≥ 2.17**). 레거시 `docker-compose`(v1) 명령은 번들된 Harbor 설치 스크립트 외에는 쓰지 않습니다.
+- **Requirements** — Docker Engine with the Compose plugin. **≥ 2.17** is required for the Python app image builds, and **≥ 2.20** for `include:`, which master_service and the standalone Plane / Gitea stacks rely on. The legacy `docker-compose` (v1) command is only used by the bundled Harbor installer.
 
 ## Web stack & CI
 
-웹 스택 서술은 정본 [devspoon-web] README 와 같습니다(검수 완료본을 이 저장소 구조에 맞춤). 모든 명령은 저장소 루트 기준입니다.
+The web stack description matches the canonical [devspoon-web] README, adapted to this repository's layout. Every command starts from the repository root.
 
-### 스택 5종
+### The five stacks
 
-| 스택 | compose 폴더 | app 서비스 | nginx 설정 폴더 | 프로파일 | 호스트 포트 |
+| Stack | compose folder | app service | nginx config folder | Profile | Host ports |
 |---|---|---|---|---|---|
-| gunicorn | `compose/web_service/nginx_gunicorn` | `gunicorn-app` | `config/web-server/nginx/gunicorn` | `celery` | 80, 443, `127.0.0.1:5555`(flower) |
+| gunicorn | `compose/web_service/nginx_gunicorn` | `gunicorn-app` | `config/web-server/nginx/gunicorn` | `celery` | 80, 443, `127.0.0.1:5555` (flower) |
 | uvicorn | `compose/web_service/nginx_uvicorn` | `uvicorn-app` | `config/web-server/nginx/uvicorn` | `celery` | 80, 443, `127.0.0.1:5555` |
 | uwsgi | `compose/web_service/nginx_uwsgi` | `uwsgi-app` | `config/web-server/nginx/uwsgi` | `celery` | 80, 443, `127.0.0.1:5555` |
-| daphne | `compose/web_service/nginx_daphne` | `daphne-app` | `config/web-server/nginx/gunicorn` (공유) | `celery` | 80, 443, `127.0.0.1:5555` |
+| daphne | `compose/web_service/nginx_daphne` | `daphne-app` | `config/web-server/nginx/gunicorn` (shared) | `celery` | 80, 443, `127.0.0.1:5555` |
 | php 8.4 | `compose/web_service/nginx_php` | `php-app` | `config/web-server/nginx/php` | `redis` | 80, 443 |
 
-- Python 스택은 `webserver`·app·`redis` 가 항상 뜨고, `--profile celery` 가 `celery`·`celery-beat`·`flower` 를 더합니다. php 스택은 `webserver`·`php-app` 이 뜨고 `--profile redis` 가 `redis` 를 더합니다.
-- 모든 스택이 80/443 을 쓰므로 한 호스트에서 한 스택만 기동합니다.
-- 샘플 앱: Python 스택은 `www/django_sample`, php 스택은 `www/php_sample`.
+- Python stacks always start `webserver`, the app and `redis`; `--profile celery` adds `celery`, `celery-beat` and `flower`. The php stack starts `webserver` and `php-app`, and `--profile redis` adds `redis`.
+- Every stack uses ports 80/443, so run only one stack per host.
+- Sample apps: `www/django_sample` for Python stacks, `www/php_sample` for the php stack.
 
-### 1. `.env` 비밀값 생성 (최초 설정 · 업그레이드)
+### 1. Generating `.env` secrets (first setup · upgrade)
 
-`.env-example` 의 비밀값(Python 스택 `DJANGO_SECRET_KEY` · `REDIS_PASSWORD` · `FLOWER_PWD`, php 스택 `REDIS_PASSWORD`)은 **빈 값**입니다. compose 가 `${VAR:?}` 로 요구하므로 비워 둔 채로는 기동이 거부됩니다. 저장소 루트에서 스택마다 한 번:
+The secrets in `.env-example` are **empty** (`DJANGO_SECRET_KEY`, `REDIS_PASSWORD`, `FLOWER_PWD` for Python stacks; `REDIS_PASSWORD` for php). Compose requires them with `${VAR:?}`, so startup is refused while they are blank. Run this once per stack, from the repository root:
 
 ```bash
 D=compose/web_service/nginx_gunicorn
@@ -115,140 +85,356 @@ cp "$D/.env-example" "$D/.env"
 bash -c ". script/lib/django_secrets.sh && ensure_env_secrets $D/.env"
 ```
 
-- 값이 비었거나 옛 `CHANGE_ME_*` 인 비밀 키만 `openssl rand -hex` 무작위 값으로 채웁니다(`DJANGO_SECRET_KEY` 100 hex, `*_KEY_BASE` 128 hex, 그 외 64 hex). 이미 값이 있는 키는 바꾸지 않습니다.
-- 같은 폴더의 임시 파일에 쓴 뒤 교체하며, 값을 생성했으면 권한을 600 으로 좁힙니다(더 엄격하면 유지). openssl 이 없거나 실패하면 `FAIL` 로 끝나고 `.env` 내용은 바뀌지 않습니다.
-- **비밀이 아닌 자리표시자는 헬퍼가 채우지 않습니다 — 운영 전에 직접 입력하세요**: `FLOWER_ID`(`CHANGE_ME_FLOWER_USER`), master·단독 plane 의 `PLANE_DOMAIN`·`PLANE_WEB_URL`·`PLANE_CORS_ALLOWED_ORIGINS`(proxy conf 의 `server_name` 과 동일), gitea 의 `GITEA_DOMAIN`·`GITEA_ROOT_URL`, `DJANGO_ALLOWED_HOSTS`(도메인 추가).
-- 호스트에서 `manage.py` 를 직접 실행할 때만 `www/django_sample` 의 `secrets.json` 이 필요합니다: `bash -c '. script/lib/django_secrets.sh && ensure_django_secrets'` (없을 때만 생성, 600). 컨테이너는 `DJANGO_SECRET_KEY` 환경변수를 씁니다.
+- Only secret keys that are empty or still hold the old `CHANGE_ME_*` placeholder are filled with `openssl rand -hex` values (`DJANGO_SECRET_KEY` 100 hex, `*_KEY_BASE` 128 hex, everything else 64 hex). Keys that already have a value are left alone.
+- The helper writes to a temporary file in the same folder and swaps it in; if it generated anything, it tightens the permissions to 600 (stricter permissions are kept). If openssl is missing or fails it ends with `FAIL` and `.env` is untouched.
+- **The helper does not fill non-secret placeholders — enter them yourself before going live.**
 
-> **업그레이드 노트 — 이전 버전에서 쓰던 `.env` 를 유지하는 경우**: 옛 `.env` 에는 `DJANGO_SECRET_KEY` 줄이 없거나 `CHANGE_ME_*` 값이 남아 있을 수 있습니다. 위 헬퍼를 같은 `.env` 에 한 번 실행하면 같은 폴더 `docker-compose*.yml` 과 그 파일들이 `include:` 로 참조하는 조각(`compose/common/*.yml`)이 `:?` 로 요구하는 비밀 키(이름에 SECRET·PASSWORD·PWD 포함 또는 `_KEY_BASE` 로 끝남) 중 없는 키를 끝에 추가하고 `CHANGE_ME_*` 를 교체하며, 기존 값은 보존하고 권한을 600 으로 맞춥니다. `KEY=""` 처럼 따옴표로 둘러싼 빈 값은 채우지 않으니 먼저 `KEY=` 로 고치세요.
+  | Key | Where | Value |
+  |---|---|---|
+  | `FLOWER_ID` | web stacks · master | flower login ID (default `CHANGE_ME_FLOWER_USER`) |
+  | `DJANGO_ALLOWED_HOSTS` | web stacks · master | add the domain you serve |
+  | `PLANE_DOMAIN` · `PLANE_WEB_URL` · `PLANE_CORS_ALLOWED_ORIGINS` | master · standalone plane | all three the same domain, matching `server_name` in the proxy conf |
+  | `GITEA_DOMAIN` · `GITEA_ROOT_URL` | master · standalone gitea | the domain and the full URL |
+
+- `www/django_sample/secrets.json` is only needed when you run `manage.py` directly on the host: `bash -c '. script/lib/django_secrets.sh && ensure_django_secrets'` (created only when missing, mode 600). Containers use the `DJANGO_SECRET_KEY` environment variable.
+
+> **Upgrade note — keeping an `.env` from an older version**
 >
-> 이전 버전은 `compose/web_service/*`·`compose/master_service`·`compose/project_mng_service/*` 의 `.env` 를 git 으로 추적했습니다. 이 버전에서 추적이 해제되어 `git pull` 이 로컬 `.env` 를 지울 수 있으니 **pull 전에 `.env` 를 다른 곳에 복사**해 두세요. 이전에 저장소에 공개됐던 `secrets.json`·`.env` 의 키로 운영 중이라면 새 값으로 교체하세요(세션 무효화).
+> An old `.env` may have no `DJANGO_SECRET_KEY` line at all, or may still hold `CHANGE_ME_*` values. Running the helper once on that same `.env` fixes it.
+>
+> What the helper does:
+>
+> - **Where it looks**: `docker-compose*.yml` in the same folder, plus any fragment those files pull in with `include:` (`compose/common/*.yml`).
+> - **What it looks for**: keys those files require with `:?` whose name contains SECRET, PASSWORD or PWD, or ends with `_KEY_BASE`.
+> - **What it does**: appends missing keys at the end of the file and replaces `CHANGE_ME_*` with new values. Keys that already have a value are untouched, and the file mode is set to 600.
+>
+> A quoted empty value such as `KEY=""` is not filled. Change it to `KEY=` first.
+>
+> Older versions tracked the `.env` files under `compose/web_service/*`, `compose/master_service` and `compose/project_mng_service/*` in git. They are untracked now, so `git pull` may remove your local `.env` — **copy it somewhere safe before pulling.** If you are running with keys from a `secrets.json` or `.env` that was once public in the repository, replace them (this invalidates sessions).
 
-### 2. 기동
+### 2. Starting a stack
 
-§1 의 `.env` 명령(저장소 루트) 뒤, 저장소 루트에서 스택 폴더로 이동해 기동합니다(`--build` 는 업그레이드나 Dockerfile / `uv.lock` 변경 뒤 이미지를 다시 빌드합니다). 한 호스트에 한 스택만 띄웁니다.
+After the `.env` commands in §1 (run from the repository root), move into the stack folder and start it. Add `--build` to rebuild images after an upgrade or a change to a Dockerfile / `uv.lock`. Run only one stack per host.
 
 ```bash
-# gunicorn (저장소 루트에서)
+# gunicorn (from the repository root)
 cd compose/web_service/nginx_gunicorn
 docker compose up -d --build             # webserver + gunicorn-app + redis
 docker compose --profile celery up -d    # + celery · celery-beat · flower
 ```
 
-uvicorn · uwsgi · daphne 는 gunicorn 과 같은 명령이며 폴더 이름만 `compose/web_service/nginx_uvicorn` · `nginx_uwsgi` · `nginx_daphne` 로 바꿉니다.
+uvicorn, uwsgi and daphne use the same commands — only the folder name changes to `compose/web_service/nginx_uvicorn`, `nginx_uwsgi` or `nginx_daphne`.
 
 ```bash
-# php (저장소 루트에서)
+# php (from the repository root)
 cd compose/web_service/nginx_php
 docker compose up -d --build             # webserver + php-app
 docker compose --profile redis up -d     # + redis
 ```
 
-- **기동 순서 — app 이 DB 를 초기화한 뒤 celery · beat**: 각 스택의 app 서비스만 서버 기동 전에 `uv sync` 후 DB 를 1회 초기화합니다(`manage.py` 가 있으면 `python manage.py migrate --noinput`, 없으면 프로젝트의 `prestart.sh`). `celery` · `celery-beat` 는 `depends_on: <app>: condition: service_healthy` 라 app 이 healthy 가 된 뒤 기동합니다 — 동시 migrate 경쟁이 없습니다.
-- **Flower** 는 **`127.0.0.1:5555` 에만 바인드**됩니다. 원격 접근은 SSH 터널: `ssh -L 5555:127.0.0.1:5555 <host>` 후 로컬 브라우저에서 `http://127.0.0.1:5555`.
-- `DJANGO_DEBUG`(기본 `0`) · `DJANGO_ALLOWED_HOSTS` 를 `.env` 로 제어하며 app · celery · beat 에 전달됩니다. `DJANGO_DEBUG=1` 은 로컬 개발에서만 쓰세요.
-- 컨테이너는 `docker compose stop` / `start` / `restart` 로 운영합니다. 프로필 서비스까지 대상이면 기동과 같은 프로필을 붙입니다(`docker compose --profile celery stop`, php 는 `--profile redis stop`) — 프로필 없는 `stop` 은 celery · celery-beat · flower(php 는 redis) 컨테이너를 남깁니다.
+> ⚠️ **`docker compose down -v` deletes named volumes**, including the web stack's app data, master_service's Plane data (`plane-pgdata` and friends) and Gitea's repositories (`gitea-data`). Use `stop` when you only want to bring the containers down.
 
-### 3. SQLite 데이터 위치 — named volume `/data`
+- **Startup order — the app initialises the DB, then celery and beat start.**
+  Only the app service initialises the database: `python manage.py migrate --noinput` if `manage.py` exists, otherwise the project's `prestart.sh`. `celery` and `celery-beat` are bound with `depends_on: <app>: condition: service_healthy`, so they start after the app is healthy. No two containers race to migrate.
+- **Flower binds to `127.0.0.1:5555` only.** Reach it over an SSH tunnel: `ssh -L 5555:127.0.0.1:5555 <host>`, then open `http://127.0.0.1:5555` locally.
+- `DJANGO_DEBUG` (default `0`) and `DJANGO_ALLOWED_HOSTS` are controlled through `.env` and passed to the app, celery and beat. Use `DJANGO_DEBUG=1` only for local development.
+- Operate containers with `docker compose stop` / `start` / `restart`. Include the same profile you started with when profile services are involved (`docker compose --profile celery stop`, or `--profile redis` for php) — without it, `stop` leaves celery, celery-beat and flower (or redis) running.
 
-Python 스택(gunicorn · uvicorn · uwsgi · daphne)의 SQLite 는 호스트 `www/<PROJECT_DIR>/db.sqlite3` 가 아니라 compose named volume `app-data` 의 **`/data/<PROJECT_DIR>.sqlite3`** (`SQLITE_PATH` 환경변수)에 저장됩니다. 컨테이너는 이 볼륨과 로그 디렉터리만 www-data 소유로 맞추고, 호스트 소스 트리(`/www`)의 소유권은 바꾸지 않습니다. `SQLITE_PATH` 가 없는 호스트 `manage.py` 실행은 여전히 `www/<PROJECT_DIR>/db.sqlite3` 를 씁니다.
+### 3. Image names · build · uv
 
-**기존 DB 이관** (호스트 `db.sqlite3` 를 계속 쓰려면 — gunicorn 스택 예, celery 프로파일은 이관 후 기동):
+- **Image names** follow `${IMAGE_NAMESPACE:-devspoon}-nginx:latest` (`-py-app:latest`, `-uwsgi-app:latest`, `-php-app:8.4`). With the default value you get `devspoon-*` tags.
 
-```bash
-cd compose/web_service/nginx_gunicorn
-docker compose up -d --build  # app-data 볼륨 생성 (빈 DB 로 migrate 됨)
-docker compose cp ../../../www/django_sample/db.sqlite3 gunicorn-app:/data/django_sample.sqlite3
-docker compose exec gunicorn-app chown www-data:www-data /data/django_sample.sqlite3
-docker compose restart gunicorn-app   # 기동 명령이 다시 돌며 이관한 DB 에 미적용 migrate 반영 (app 만 — 전체 restart 는 nginx 기동 경합)
-```
-
-> ⚠️ **`docker compose down -v` 는 `app-data` 볼륨, 즉 SQLite DB 를 삭제합니다.** 컨테이너만 내리려면 `docker compose stop` 을 쓰세요 (`down` 은 비권장, 특히 `-v`; 프로필 서비스는 §2 처럼 `--profile` 을 붙임). 백업: `docker compose cp gunicorn-app:/data/django_sample.sqlite3 ./backup.sqlite3`. master_service 의 Plane 데이터 볼륨(`plane-pgdata`·`plane-uploads` 등)과 Gitea 저장소 볼륨(`gitea-data`)도 `-v` 로 삭제됩니다.
-
-### 4. 이미지 이름 · 빌드 · uv
-
-- 이미지 이름은 `${IMAGE_NAMESPACE:-devspoon}-nginx:latest` 형식입니다(`-py-app:latest`, `-uwsgi-app:latest`, `-php-app:8.4`). 기본값이면 `devspoon-*` 태그이고, 검증기·`verify-ngxblocker.sh` 는 `IMAGE_NAMESPACE=devspoon-it`, run-ci 빌드 단계(`s2_build.sh`)는 `devspoon-test/*` 태그로 빌드해 운영 태그를 덮어쓰지 않습니다.
-- 앱 이미지(`py-app` · `uwsgi-app`)의 사전 설치 패키지는 `www/django_sample/uv.lock` 에서 도출됩니다. compose 는 `build.additional_contexts: lock: ../../../www/django_sample` 로 이를 자동 전달하므로 **Docker Compose ≥ 2.17** 이 필요합니다 (`docker compose version`).
-- Compose 가 2.17 미만이거나 `docker build` 를 직접 쓸 때는 추가 빌드 컨텍스트를 명시합니다(저장소 루트, BuildKit):
+  Tests use a different namespace so they never overwrite your production tags — the verifiers and `verify-ngxblocker.sh` use `IMAGE_NAMESPACE=devspoon-it`, and run-ci's build step (`s2_build.sh`) uses `devspoon-test/*`.
+- The pre-installed packages in the app images (`py-app`, `uwsgi-app`) are derived from `www/django_sample/uv.lock`. Compose passes it automatically via `build.additional_contexts: lock: ../../../www/django_sample`, which needs **Docker Compose ≥ 2.17**  (`docker compose version`).
+- If your Compose is older than 2.17, or you call `docker build` directly, pass the extra build context explicitly (from the repository root, with BuildKit):
 
   ```bash
   docker build --build-context lock=www/django_sample -t devspoon-py-app:latest docker/gunicorn/
   docker build --build-context lock=www/django_sample -t devspoon-uwsgi-app:latest docker/uwsgi/
   ```
 
-  빠뜨리면 빌드가 `"/pyproject.toml": not found` 로 실패합니다.
-- **uv**: `www/django_sample` 의 의존성은 `pyproject.toml` · `uv.lock` 으로 관리합니다. 컨테이너는 가상환경 없이 시스템 Python 에 설치하며(`UV_PROJECT_ENVIRONMENT=/usr/local`), 기동 명령이 `uv sync --inexact --extra <stack> --extra celery` 를 실행합니다. 같은 스택의 app · celery · celery-beat 는 같은 extras 로 sync 합니다. 의존성 추가는 호스트에서 `cd www/django_sample && uv add <pkg>` 후 `uv.lock` 을 커밋하고 스택 폴더에서 `docker compose --profile celery stop && docker compose up -d --build` 로 재기동하고, celery 사용 시 `docker compose --profile celery up -d` 로 celery · celery-beat 도 다시 올립니다(앱 이미지 사전 설치도 `uv.lock` 에서 도출; celery 는 `build:` 없이 같은 이미지를 참조하므로 프로필 없는 `up --build` 만으로는 옛 이미지·옛 의존성으로 계속 동작).
+  Leaving it out makes the build fail with `"/pyproject.toml": not found`.
+- **uv** — dependencies for `www/django_sample` are managed with `pyproject.toml` and `uv.lock`. Containers install into the system Python without a virtualenv (`UV_PROJECT_ENVIRONMENT=/usr/local`), and the startup command runs `uv sync --inexact --extra <stack> --extra celery`. The app, celery and celery-beat of one stack sync with the same extras.
 
-### 5. nginx · php 설정
+  Adding a dependency has an order to it:
 
-- nginx conf 생성기: `config/web-server/nginx/<gunicorn|uvicorn|uwsgi|php>/` 의 `nginx_http_conf.sh` · `nginx_https_conf.sh` 가 `sample_nginx_http(s).conf` 로 `conf.d/` 에 도메인별 conf 를 만듭니다(`-h` 로 옵션 확인). daphne 는 gunicorn 폴더를 씁니다.
-- nginx 기동 훅: 이미지의 `/docker-entrypoint.d/30-wait-upstreams.sh` 가 conf 의 upstream(앱 컨테이너) 이름이 해석될 때까지 최대 `NGINX_UPSTREAM_WAIT` 초(기본 30, `0` 이면 비활성, webserver `environment` 로 조정) 기다린 뒤 nginx 를 띄웁니다 — 재부팅·`start` 처럼 app 보다 webserver 가 먼저 뜰 때 `[emerg] host not found in upstream` 으로 죽는 것을 막습니다. 전체 `docker compose restart` 는 동시 재시작이라 훅으로도 완전히 막히지 않으니 conf 반영은 `nginx -s reload`, 전체 재기동은 `stop` → `start` 를 쓰세요.
-- php-fpm pool 은 **`config/app-server/php/pool.d/www.conf` 를 편집**합니다. compose 는 `www.conf`(`/usr/local/etc/php-fpm.d/www.conf`)와 `config/app-server/php/php_ini/php.ini` 만 단일 파일로 읽기 전용 마운트하므로, `php_conf.sh` 가 `pool.d/` 에 만드는 `<DOMAIN>_php.conf` 는 로드되지 않습니다.
+  ```bash
+  cd www/django_sample && uv add <pkg>        # 1. add on the host → commit uv.lock
+  cd compose/web_service/nginx_gunicorn        # 2. into the stack folder
+  docker compose --profile celery stop
+  docker compose up -d --build                 # 3. rebuild the app image
+  docker compose --profile celery up -d        # 4. bring celery · celery-beat back too
+  ```
 
-### 6. CI — `script/ci/run-ci.sh`
+  Skip step 4 and celery keeps running with the old dependencies. The celery services have no `build:` of their own — they only reference the app's image — so `up --build` without the profile does not replace them.
 
-`bash script/ci/run-ci.sh` 가 11단계를 순서대로 실행합니다: preflight → prereq·로그 디렉터리 → nginx conf 생성기 → compose 검증 → 저장소 고유 검사(`script/ci/repo-steps.sh`) → 이미지 빌드 → 정적 회귀(s6) → healthcheck → 스택 매트릭스(gunicorn · uvicorn · uwsgi · daphne · php 실기동) → 샘플 프로젝트 → 스크립트 로그.
+### 4. nginx · php configuration
 
-- 실제 컨테이너를 띄우므로 호스트 80/443/5555 가 비어 있어야 합니다. 필요 도구: docker(Compose ≥ 2.17), uv, jq, curl, openssl, php-cli.
-- GitHub Actions(`.github/workflows/test.yml`)는 같은 스크립트를 실행합니다. 알림은 선택 — 저장소 secrets `SLACK_WEBHOOK_URL`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` 가 없으면 해당 알림을 건너뜁니다. 업로드 로그(`log/ci`, `log/test_run`)는 `script/lib/mask_secrets.sh` 로 비밀값을 마스킹한 뒤 올립니다.
+- **nginx conf generators** — `nginx_http_conf.sh` and `nginx_https_conf.sh` under `config/web-server/nginx/<gunicorn|uvicorn|uwsgi|php>/` turn `sample_nginx_http(s).conf` into per-domain configs in `conf.d/`. Run with `-h` for the options. The daphne stack reuses the gunicorn folder.
+- **nginx startup hook** — the image's `/docker-entrypoint.d/30-wait-upstreams.sh` waits until the upstream names (app containers) in the configs resolve before starting nginx. The wait is `NGINX_UPSTREAM_WAIT` seconds (default 30, `0` disables it), adjustable through the webserver's `environment`.
 
-## master_service — 웹 스택 + Plane · Jenkins · Gitea
+  This prevents nginx from dying with `[emerg] host not found in upstream` when it comes up before the app, such as after a reboot or a `start`. It cannot fully cover a whole-project `docker compose restart`, where everything restarts at once — **apply config changes with `nginx -s reload`, and restart everything with `stop` → `start`.**
+- **Edit the php-fpm pool at `config/app-server/php/pool.d/www.conf`.** Compose mounts exactly two files read-only: that `www.conf` and `config/app-server/php/php_ini/php.ini`. Any `<DOMAIN>_php.conf` that `php_conf.sh` writes into `pool.d/` is therefore never loaded.
 
-`compose/master_service/` 의 5조합은 한 nginx(`webserver`) 뒤에 웹 스택과 Plane · Jenkins · Gitea 를 함께 띄웁니다. `.env` 하나(`compose/master_service/.env-example`)를 공유하고, Plane · Gitea 서비스 정의는 단독 스택과 같은 `compose/common/{plane-services,gitea-service}.yml` 을 `include:` 합니다(**Docker Compose ≥ 2.20**).
+### 5. CI — `script/ci/run-ci.sh`
 
-| 파일 | 웹 스택 | 프로파일 |
+#### What it is for
+
+A regression suite that answers one question after you change the repository: **do all the stacks in it still actually come up?** It does not stop at syntax checks — it starts the containers and waits for real responses.
+
+GitHub Actions (`.github/workflows/test.yml`) calls the same script on every push, and you can run `bash script/ci/run-ci.sh` locally for the same result.
+
+#### How it works
+
+It runs 11 steps **in order** and **stops immediately** on the first failure. Each step writes a log under `log/ci/`, and on failure it reports which step failed and why, with the tail of that log.
+
+| # | Step | What it does |
 |---|---|---|
-| `docker-compose-gunicorn.yml` | gunicorn | `celery` |
-| `docker-compose-uvicorn.yml` | uvicorn | `celery` |
-| `docker-compose-uwsgi.yml` | uwsgi | `celery` |
-| `docker-compose-daphne.yml` | daphne | `celery` |
-| `docker-compose-php.yml` | php 8.4 | `redis` (celery 없음) |
+| 1 | preflight | Checks the required tools and files exist and the design invariants hold (read-only) |
+| 2 | prereq · log dirs | Creates the log folders the tests write to |
+| 3 | nginx conf generators | Verifies the configs produced by `nginx_http_conf.sh` / `nginx_https_conf.sh` match the inputs |
+| 4 | compose validation | Compose syntax and mount paths for every stack |
+| 5 | repository-specific checks | `script/ci/repo-steps.sh` — rules unique to this repository (static assertions for Plane, Gitea, Jenkins, Harbor) |
+| 6 | image builds | Builds every Dockerfile under `devspoon-test/*` tags (never overwriting production tags) |
+| 7 | static regression | `s6_regression.sh` — invariants that catch previously fixed defects coming back |
+| 8 | healthcheck | Validates the healthcheck and `depends_on` declarations of the five stacks |
+| 9 | stack matrix | **Actually starts** gunicorn · uvicorn · uwsgi · daphne · php in turn — 200 responses, bot blocking, healthy, zero restarts, DEBUG off, 403 on upload paths |
+| 10 | sample projects | Checks the django and php samples work |
+| 11 | script logs | Checks the scripts write their logs properly |
 
-모든 조합에 **Plane**(`makeplane/plane-*`, 앱·DB·큐·오브젝트 저장소·내부 프록시 13 서비스) · `jenkins`(`jenkins/jenkins:lts-jdk21`) · **Gitea**(`gitea/gitea`, 호스트 2222 = git over SSH) 가 포함됩니다.
+#### Requirements
 
-1. **Plane · Gitea 는 사전 준비가 없습니다** — 관리자 계정은 기동 뒤에 만듭니다([Plane](#plane) 6 · [Gitea](#gitea) 4단계).
-2. **`.env` 생성** — Plane 비밀 키 5종도 헬퍼가 생성합니다(`include:` 한 `compose/common/plane-services.yml` 의 `${KEY:?}` 까지 훑습니다).
+- It starts real containers, so **host ports 80, 443 and 5555 must be free.**
+- Tools needed: docker (Compose ≥ 2.17), uv, jq, curl, openssl, php-cli.
+- Notifications are optional. If the repository secrets `SLACK_WEBHOOK_URL`, `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are absent, only those notifications are skipped — the tests still run.
+- Uploaded logs (`log/ci`, `log/test_run`) are masked with `script/lib/mask_secrets.sh` before upload.
 
-   ```bash
-   D=compose/master_service
-   cp "$D/.env-example" "$D/.env"
-   bash -c ". script/lib/django_secrets.sh && ensure_env_secrets $D/.env"
-   ```
+#### If you do not want it
 
-   이어서 `PLANE_DOMAIN` · `PLANE_WEB_URL` · `PLANE_CORS_ALLOWED_ORIGINS` · `GITEA_DOMAIN` · `GITEA_ROOT_URL` · `FLOWER_ID` 자리표시자를 직접 입력합니다.
-3. **proxy 샘플 복사** — webserver 가 `config/web-server/nginx/php/proxy/<svc>/` 를 `/etc/nginx/proxy.d/<svc>/` 로 읽기 전용 마운트하고, `nginx.conf` 가 `include /etc/nginx/proxy.d/*/*.conf;` 로 읽습니다. `conf.d` 로 복사하지 않습니다.
+CI only serves repository maintenance; it has nothing to do with running the services. Delete `.github/workflows/test.yml` and Actions stops running. You can delete `script/ci/` and `script/test_run/` entirely without affecting anything under `compose/`.
 
-   ```bash
-   P=config/web-server/nginx/php/proxy
-   cp "$P/plane/plane_proxy.conf.example" "$P/plane/plane_proxy.conf"                           # server_name 수정
-   cp "$P/gitea/gitea_proxy.conf.example" "$P/gitea/gitea_proxy.conf"                           # server_name 수정
-   cp "$P/jenkins/jenkins_proxy.conf.example" "$P/jenkins/jenkins_proxy.conf"                   # server_name 수정
-   ```
+## Choosing an install method — all-in-one vs standalone
 
-   복사본(`*_proxy.conf`, gitignore)이 없으면 주석뿐인 `default.conf` 만 읽혀 해당 proxy 가 비활성입니다. 샘플은 HTTP(80) 서버 블록만 있으므로 TLS 는 [HTTPS 절](#setting-up-https-on-a-web-server)로 443 블록을 추가합니다.
-4. **기동** — 저장소 루트에서 스택 폴더로 이동합니다(`--build` 는 업그레이드나 Dockerfile / `uv.lock` 변경 뒤 이미지를 다시 빌드합니다).
+Plane, Jenkins and Gitea can be installed **two ways**. Either way the service definitions come from the same files under `compose/common/`, so behaviour is identical — the only difference is whether they share one front nginx.
 
-   ```bash
-   cd compose/master_service
-   docker compose -f docker-compose-gunicorn.yml --profile celery up -d --build
-   docker compose -f docker-compose-php.yml --profile redis up -d --build      # php 조합
-   ```
+| | All-in-one (`compose/master_service`) | Standalone (`compose/project_mng_service`) |
+|---|---|---|
+| What comes up | web stack + Plane + Jenkins + Gitea, **all at once** | the **one** service you picked |
+| nginx | **one nginx** proxies the web app and all three by domain | one nginx dedicated to that service |
+| Running together | everything runs together | **one at a time** (they all take 80/443) |
+| TLS | can be configured ([HTTPS section](#setting-up-https-on-a-web-server)) | **HTTP only** |
+| When to use | production, running several solutions together | evaluating or testing a single service |
 
-   > ⚠️ **첫 기동은 Plane 마이그레이션 때문에 수 분 걸립니다**: `plane-migrator` 가 성공으로 끝난 뒤 `plane-api` 가 뜨고, 그 뒤에 `plane-proxy` 가 준비됩니다. Plane · Gitea 데이터는 named volume 이므로 호스트 폴더를 만들 필요가 없습니다(`docker compose down -v` 는 그 볼륨을 지웁니다).
+Harbor installs through its own installer and belongs to neither — see [Harbor](#harbor).
 
-## project_mng_service — 단독 서비스
+```
+All-in-one example — one nginx splits traffic by domain
 
-### 단독 서비스 동시 기동 규칙
+  test.com        ->  web app (django / php)
+  plane.test.com  ->  Plane
+  jen.test.com    ->  Jenkins
+  git.test.com    ->  Gitea   (+ git clone over ssh://…:2222)
+```
 
-- **단독 서비스는 한 번에 하나만 기동합니다.** `nginx_plane` · `nginx_jenkins` · `gitea` 가 모두 호스트 80/443(또는 2222)을 쓰고, `plane-*` · `jenkins` · `gitea` 컨테이너 이름이 master_service 와 같습니다. 웹 스택(`compose/web_service`)·master_service 와도 동시에 띄울 수 없습니다.
-- **여러 서비스를 동시에 운영하려면 master_service 를 쓰세요.**
-- **단독 proxy 스택(`nginx_plane` · `nginx_jenkins` · `gitea`)은 HTTP 전용입니다(80, TLS 없음).** 443 은 매핑돼 있지만 catch-all `default.conf` 가 TLS 핸드셰이크를 거부(`ssl_reject_handshake on`)할 뿐 서비스용 TLS 서버 블록이 없어, 로그인 자격증명이 80 으로 평문 전송됩니다. 공개망 운영은 앞단 TLS 종단(별도 리버스 프록시·LB) 뒤에 두거나, TLS 를 구성할 수 있는 master_service 를 쓰세요.
+## All-in-one startup — master_service (one compose file for everything)
 
-단독 proxy 스택 구조: nginx 가 `config/web-server/nginx/php/proxy/<svc>/` 서비스별 폴더를 `/etc/nginx/conf.d/` 로 읽기 전용 마운트하고, 그 폴더의 자리표시자 `default.conf` 자리에 catch-all `config/web-server/nginx/php/conf.d/default.conf` 를 덮어 마운트합니다. 복사본 `<svc>_proxy.conf` 가 없으면 모든 Host 에 444 로 응답하며 정상 기동합니다. 자리표시자 `default.conf` 는 편집·삭제하지 마세요(읽기 전용 마운트 지점).
+Running **one** compose file from `compose/master_service/` brings up the web stack, Plane, Jenkins and Gitea together, with a single nginx splitting traffic by domain. There is no need to start each service separately.
+
+### Choosing a file
+
+Only the web stack differs; **Plane, Jenkins and Gitea are in all five files.** Pick one.
+
+| File | Web stack | Profile to add |
+|---|---|---|
+| `docker-compose-gunicorn.yml` | gunicorn | `--profile celery` |
+| `docker-compose-uvicorn.yml` | uvicorn | `--profile celery` |
+| `docker-compose-uwsgi.yml` | uwsgi | `--profile celery` |
+| `docker-compose-daphne.yml` | daphne | `--profile celery` |
+| `docker-compose-php.yml` | php 8.4 | `--profile redis` (no celery) |
+
+What one file brings up — **17 containers** for the php combination:
+
+| Group | Containers |
+|---|---|
+| Web | `nginx-webserver` · `php-app` (or `<stack>-app`) · `redis_db` |
+| Plane | `plane-db` · `plane-redis` · `plane-mq` · `plane-minio` · `plane-migrator` (one-shot) · `plane-api` · `plane-worker` · `plane-beat-worker` · `plane-web` · `plane-space` · `plane-admin` · `plane-live` · `plane-proxy` |
+| Jenkins | `jenkins` ( + one-shot `jenkins-init`) |
+| Gitea | `gitea` |
+
+The Plane and Gitea definitions are pulled in with `include:` from the **same files** the standalone stacks use (`compose/common/{plane-services,gitea-service}.yml`) — this needs **Docker Compose ≥ 2.20**.
+
+### Startup steps
+
+All commands below start from the **repository root**. There is nothing to prepare in advance — the Plane and Gitea admin accounts are created after startup.
+
+**1. Create `.env` and fill in the secrets**
+
+```bash
+D=compose/master_service
+cp "$D/.env-example" "$D/.env"
+bash -c ". script/lib/django_secrets.sh && ensure_env_secrets $D/.env"
+```
+
+The helper walks the `include:`d definitions too, so it fills the five Plane secrets along with `REDIS_PASSWORD`, `DJANGO_SECRET_KEY` and the rest.
+
+**2. Fill in the placeholders yourself** — the helper does not touch these. Open `compose/master_service/.env` and put in your real domains.
+
+| Key | Value | Notes |
+|---|---|---|
+| `DJANGO_ALLOWED_HOSTS` | add the web app domain | e.g. `localhost,127.0.0.1,web.example.com` |
+| `PLANE_DOMAIN` · `PLANE_WEB_URL` · `PLANE_CORS_ALLOWED_ORIGINS` | the Plane domain (all three identical) | `WEB_URL` and `CORS` include the `http://` prefix |
+| `GITEA_DOMAIN` · `GITEA_ROOT_URL` | the Gitea domain | `ROOT_URL` is the full URL with a trailing `/` |
+| `FLOWER_ID` | flower login ID | Python stacks only |
+
+**3. Generate the web app's domain config** — web stacks get their per-domain config from a generator. Skip this and only the bundled `localhost` config exists, so requests for your web domain hit the catch-all and are cut off with **444**.
+
+```bash
+# php example — webroot php_sample, backend php-app:9000
+bash config/web-server/nginx/php/nginx_http_conf.sh -w php_sample -p 80 -d web.example.com -a php-app -s 9000
+```
+
+Python combinations use a different folder and arguments (gunicorn, for example: `config/web-server/nginx/gunicorn/nginx_http_conf.sh -w django_sample -p 80 -d <domain> -a gunicorn-app -s 8000`). Run with `-h` for the options.
+
+**4. Copy the three proxy configs** — for Plane, Jenkins and Gitea. Skip one and only that service is inactive; the rest start normally.
+
+```bash
+P=config/web-server/nginx/php/proxy
+cp "$P/plane/plane_proxy.conf.example"     "$P/plane/plane_proxy.conf"       # server_name -> Plane domain
+cp "$P/jenkins/jenkins_proxy.conf.example" "$P/jenkins/jenkins_proxy.conf"   # server_name -> Jenkins domain
+cp "$P/gitea/gitea_proxy.conf.example"     "$P/gitea/gitea_proxy.conf"       # server_name -> Gitea domain
+```
+
+The webserver mounts that folder read-only at `/etc/nginx/proxy.d/<svc>/`, and `nginx.conf` reads it with `include /etc/nginx/proxy.d/*/*.conf;`. **Do not copy into `conf.d`.** The samples contain only an HTTP (80) server block — add the 443 block through the [HTTPS section](#setting-up-https-on-a-web-server).
+
+**5. Start** — one compose file brings everything up.
+
+```bash
+cd compose/master_service
+docker compose -f docker-compose-php.yml --profile redis up -d --build          # php combination
+# or
+docker compose -f docker-compose-gunicorn.yml --profile celery up -d --build    # gunicorn combination
+```
+
+`--build` rebuilds the web stack images (nginx and app). Add it after an upgrade or a change to a Dockerfile / `uv.lock`. Plane, Jenkins and Gitea pull public images and are never built.
+
+> ⚠️ **The first startup takes several minutes.** `plane-migrator` must finish the DB migration before `plane-api` starts, and `plane-proxy` becomes ready after that. Add `--wait` to block until everything is ready (`--wait --wait-timeout 900`).
+
+**6. Verify**
+
+```bash
+docker compose -f docker-compose-php.yml --profile redis ps          # container status
+docker compose -f docker-compose-php.yml exec webserver nginx -t     # config check including proxy.d
+```
+
+**7. First-time setup per service** — done after startup.
+
+| Service | What to do |
+|---|---|
+| Plane | Open the domain in a browser and sign up — you become the first user. Instance settings live at `/god-mode/` (see [Plane](#plane)) |
+| Jenkins | `docker compose -f docker-compose-php.yml exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword` for the initial password |
+| Gitea | `docker compose -f docker-compose-php.yml exec -u git gitea gitea admin user create --username <id> --password '<pw>' --email <mail> --admin` |
+
+### Operating commands
+
+Always pass `-f docker-compose-<stack>.yml` together with the profile you started with.
+
+| Goal | Command |
+|---|---|
+| Apply a config change only | `docker compose -f … exec webserver nginx -t && … exec webserver nginx -s reload` |
+| Restart nginx only | `docker compose -f … restart webserver` |
+| Restart everything | `docker compose -f … --profile redis stop` → `… start` |
+| Stop everything | `docker compose -f … --profile redis stop` |
+
+> ⚠️ Avoid a whole-project `docker compose restart`. Everything restarts at once, and nginx can come up while the app is down and die once with `[emerg] host not found in upstream`.
+> ⚠️ `docker compose down -v` **deletes** the Plane data and the Gitea repositories.
+
+## project_mng_service — standalone installation
+
+### Standalone concurrency rules
+
+- **Run only one standalone service at a time.** `nginx_plane`, `nginx_jenkins` and `gitea` all take host 80/443 (or 2222), and the `plane-*`, `jenkins` and `gitea` container names are the same ones master_service uses. They also cannot run alongside a web stack (`compose/web_service`) or master_service.
+- **To run several services at once, use master_service.**
+- **Standalone stacks are HTTP only (port 80, no TLS).**
+  Port 443 is mapped, but there is no TLS server block for the service — the catch-all `default.conf` merely rejects the handshake (`ssl_reject_handshake on`). In other words **login credentials travel in clear text.**
+  For public networks put a TLS terminator (a separate reverse proxy or LB) in front, or use master_service, where TLS can be configured.
+
+**How the standalone nginx is wired**
+
+- The per-service folder `config/web-server/nginx/php/proxy/<svc>/` is mounted read-only at `/etc/nginx/conf.d/`.
+- The catch-all `config/web-server/nginx/php/conf.d/default.conf` is mounted over the placeholder `default.conf` inside that folder.
+- Without a `<svc>_proxy.conf` copy, nginx answers 444 to every Host and **still starts normally**.
+
+> The placeholder `default.conf` is a read-only mount point. Do not edit or delete it.
+
+---
 
 ### Plane
 
-1. `.env` 생성 — Plane 비밀 키 5종(`PLANE_SECRET_KEY` · `PLANE_LIVE_SERVER_SECRET_KEY` · `PLANE_DB_PASSWORD` · `PLANE_MQ_PASSWORD` · `PLANE_MINIO_PASSWORD`)이 비어 있으면 compose 가 기동을 거부합니다. 헬퍼가 `include:` 한 `compose/common/plane-services.yml` 의 키까지 찾아 채웁니다.
+#### What it is
+
+Official site: [Plane]
+
+**In one line**: an open source project management tool that splits work into issues and groups them into cycles. Same family as Jira and Linear, installed and run on your own server.
+
+**Concepts** — nested from the top down.
+
+| Concept | Description |
+|---|---|
+| Instance | The whole Plane installation. Sign-up policy, authentication and mail are configured in **God Mode** (`/god-mode/`) |
+| Workspace | A company or team space. Members and permissions attach here |
+| Project | A unit of work inside a workspace, with its own identifier (e.g. `LIVE`) |
+| Issue | The actual task, with state, assignee, priority, labels and due date |
+| Cycle | Issues grouped by a time box — the equivalent of a sprint |
+| Module | Issues grouped by feature or goal, independent of time |
+
+**Main features**
+
+| Feature | Description |
+|---|---|
+| Multiple views | Switch the same issue list between board (kanban), list, calendar, gantt and spreadsheet |
+| Cycles · modules | Run sprints and feature groupings separately, with burndown charts for progress |
+| Pages | Documents attached to a project, **edited by several people at once** (handled by `plane-live`) |
+| Public sharing | Publish an issue list or page read-only to the outside (handled by `plane-space`) |
+| Attachments · images | Stored in the S3-compatible store (`plane-minio`) |
+| API | Create and query workspaces, projects and issues over a REST API |
+| God Mode | Instance admin screen — sign-up policy, authentication (password, magic link, OAuth), SMTP, file size limits |
+
+**Use it when**
+
+- You want issue and sprint management **on your own server** rather than on a SaaS.
+- You want it under the same domain family as Jenkins and Gitea, operated in one place.
+
+**Worth knowing**
+
+- 13 containers in one bundle make it the heaviest service in this repository. The first startup takes several minutes.
+- Mail (invitations, notifications) is off by default. Configure SMTP in God Mode to use it.
+
+#### Architecture
+
+13 containers work as one bundle. The definition lives in **one place**, `compose/common/plane-services.yml`, shared by the standalone stack and all five master_service combinations through `include:` (**Docker Compose ≥ 2.20** required).
+
+| Role | Container | Image |
+|---|---|---|
+| Web UI | `plane-web` | `makeplane/plane-frontend` |
+| Public pages | `plane-space` | `makeplane/plane-space` |
+| Admin screen (God Mode) | `plane-admin` | `makeplane/plane-admin` |
+| API server | `plane-api` | `makeplane/plane-backend` |
+| Live collaboration (WebSocket) | `plane-live` | `makeplane/plane-live` |
+| Background jobs | `plane-worker` · `plane-beat-worker` | `makeplane/plane-backend` |
+| DB migration (one-shot) | `plane-migrator` | `makeplane/plane-backend` |
+| Database | `plane-db` | `postgres:15.7-alpine` |
+| Cache | `plane-redis` | `valkey/valkey:7.2.11-alpine` |
+| Message queue | `plane-mq` | `rabbitmq:3.13.6-management-alpine` |
+| Attachment storage | `plane-minio` | `quay.io/minio/minio` (S3 compatible) |
+| In-stack proxy | `plane-proxy` | `makeplane/plane-proxy` (Caddy) |
+
+- **No host ports are published.** The front nginx proxies to `plane-proxy`.
+- **All data lives in named volumes**: `plane-pgdata` (DB), `plane-uploads` (attachments), `plane-rabbitmq`, `plane-redisdata`, `plane-proxy-*`, `plane-logs-*`. No host folders to create up front.
+- Based on the upstream `deployments/cli/community/docker-compose.yml`, adjusted to close the host ports and sit behind the front nginx.
+
+#### Standalone installation and use
+
+1. **Create `.env`** — compose refuses to start while the five secrets (`PLANE_SECRET_KEY`, `PLANE_LIVE_SERVER_SECRET_KEY`, `PLANE_DB_PASSWORD`, `PLANE_MQ_PASSWORD`, `PLANE_MINIO_PASSWORD`) are empty. The helper walks the `include:`d definition and fills them.
 
    ```bash
    D=compose/project_mng_service/nginx_plane
@@ -256,106 +442,376 @@ docker compose restart gunicorn-app   # 기동 명령이 다시 돌며 이관한
    bash -c ". script/lib/django_secrets.sh && ensure_env_secrets $D/.env"
    ```
 
-2. 도메인 3개를 **같은 값**으로 직접 입력합니다(헬퍼가 채우지 않는 자리표시자): `PLANE_DOMAIN` · `PLANE_WEB_URL` · `PLANE_CORS_ALLOWED_ORIGINS`. proxy conf 의 `server_name` 과도 같아야 로그인·API·실시간 협업(WebSocket)이 모두 동작합니다. HTTPS 로 서비스하면 `PLANE_WEB_URL` · `PLANE_CORS_ALLOWED_ORIGINS` 를 `https://` 로 적습니다.
+2. **Enter the domain** — set `PLANE_DOMAIN`, `PLANE_WEB_URL` and `PLANE_CORS_ALLOWED_ORIGINS` to the **same domain** yourself (the helper does not fill these). They must also match `server_name` in the proxy conf for login, the API and live collaboration to work. When serving over HTTPS, write the two URLs with `https://`.
 
-3. proxy 샘플 복사(저장소 루트): `P=config/web-server/nginx/php/proxy/plane; cp "$P/plane_proxy.conf.example" "$P/plane_proxy.conf"` 후 `server_name` 수정.
-
-4. 기동(저장소 루트에서): `cd compose/project_mng_service/nginx_plane && docker compose up -d` (HTTP 전용 — 위 단독 서비스 규칙 참조). 첫 기동은 `plane-migrator` 가 DB 마이그레이션을 마친 뒤 `plane-api` 가 뜨므로 수 분 걸립니다.
-
-5. 구성: 앱(`plane-web` · `plane-space` · `plane-admin` · `plane-api` · `plane-live` · `plane-worker` · `plane-beat-worker` · 1회성 `plane-migrator`) + 데이터(`plane-db` PostgreSQL 15 · `plane-redis` Valkey · `plane-mq` RabbitMQ · `plane-minio` S3 호환 저장소) + 스택 내부 프록시(`plane-proxy`, Caddy). 정의는 `compose/common/plane-services.yml` 한 곳에 있고 master_service 5조합이 같은 파일을 `include:` 합니다 — **Docker Compose ≥ 2.20** 이 필요합니다.
-
-6. 첫 계정: 브라우저로 도메인에 접속해 가입하면 그 계정이 인스턴스 첫 사용자가 됩니다. 인스턴스 관리(`/god-mode`)는 `plane-admin` 이 담당하며 같은 도메인의 `/god-mode/` 경로로 열립니다. 외부 가입을 막으려면 God Mode 의 Authentication 설정에서 sign-up 을 끕니다.
-
-7. > ⚠️ **비밀값을 바꾸면 기존 DB 볼륨과 어긋납니다**: `PLANE_DB_PASSWORD` 는 `plane-pgdata` 볼륨이 처음 만들어질 때의 PostgreSQL 사용자 비밀번호로 굳습니다. `.env` 만 새로 만들어(또는 `ensure_env_secrets` 를 빈 `.env` 에 다시 돌려) 값이 바뀌면 `plane-migrator` 가
-   > `FATAL: password authentication failed for user "plane"` 으로 실패하고 뒤따르는 앱 컨테이너가 전부 기동하지 못합니다. 값을 바꿀 때는 DB 안의 비밀번호도 함께 바꾸거나(`docker compose exec plane-db psql -U plane -c "ALTER USER plane PASSWORD '<새 값>';"`), 데이터를 버려도 되면 볼륨을 새로 만드세요(`docker compose down -v`).
-
-8. 데이터는 전부 named volume 입니다(`plane-pgdata` · `plane-uploads` · `plane-rabbitmq` · `plane-redisdata` · `plane-proxy-*` · `plane-logs-*`). 호스트 폴더 소유권 문제가 없는 대신 **`docker compose down -v` 를 쓰면 전부 삭제**됩니다 — 컨테이너만 내릴 때는 `stop` 을 쓰세요. 논리 백업 예:
+3. **Prepare the proxy conf** (from the repository root)
 
    ```bash
-   D=compose/project_mng_service/nginx_plane   # master: D=compose/master_service, 아래 명령에 -f docker-compose-<stack>.yml 추가
-   (cd "$D" && docker compose exec -T plane-db pg_dump -U plane -d plane) | gzip > ~/plane-db-$(date +%F).sql.gz
-   chmod 600 ~/plane-db-*.sql.gz   # 사용자·워크스페이스 데이터가 들어 있다
+   P=config/web-server/nginx/php/proxy/plane
+   cp "$P/plane_proxy.conf.example" "$P/plane_proxy.conf"   # set server_name to your domain
    ```
 
-   첨부 파일은 `plane-minio` 볼륨(`plane-uploads`)에 있습니다: `docker run --rm -v plane-uploads:/d -v "$HOME":/b alpine tar czf /b/plane-uploads.tgz -C /d .`
+4. **Start**
 
-9. 더 자세한 내용은 [Plane 공식 문서][Plane docs] 참고. 이 저장소의 정의는 업스트림 `deployments/cli/community/docker-compose.yml` 을 기준으로, 호스트 포트를 열지 않고 앞단 nginx 뒤에 두도록 조정한 것입니다.
+   ```bash
+   cd compose/project_mng_service/nginx_plane
+   docker compose up -d --build
+   ```
+
+   The first startup takes **several minutes**. `plane-migrator` must finish the DB migration before `plane-api` starts; the rest follow.
+
+5. **First account** — open the domain in a browser and sign up; that account becomes the first user of the instance. Instance administration is at `/god-mode/` on the same domain. To block outside sign-ups, turn sign-up off in God Mode's Authentication settings.
+
+6. **Backup**
+
+   ```bash
+   D=compose/project_mng_service/nginx_plane   # master: D=compose/master_service + -f docker-compose-<stack>.yml
+   (cd "$D" && docker compose exec -T plane-db pg_dump -U plane -d plane) | gzip > ~/plane-db-$(date +%F).sql.gz
+   chmod 600 ~/plane-db-*.sql.gz               # it contains user and workspace data
+   ```
+
+   Attachments live in the `plane-uploads` volume: `docker run --rm -v plane-uploads:/d -v "$HOME":/b alpine tar czf /b/plane-uploads.tgz -C /d .`
+
+> ⚠️ **Changing a secret breaks the existing database.** `PLANE_DB_PASSWORD` is frozen as the PostgreSQL password at the moment the `plane-pgdata` volume is created. Recreate `.env` with a different value and `plane-migrator` fails with `FATAL: password authentication failed for user "plane"`, and none of the containers behind it start.
+> To change it, change the database too (`docker compose exec plane-db psql -U plane -c "ALTER USER plane PASSWORD '<new value>';"`), or discard the data and recreate the volume (`docker compose down -v`).
+
+See the [Plane documentation][Plane docs] for more.
 
 ---
 
 ### Jenkins
 
-1. proxy 샘플 복사(저장소 루트): `P=config/web-server/nginx/php/proxy/jenkins; cp "$P/jenkins_proxy.conf.example" "$P/jenkins_proxy.conf"` 후 `server_name` 수정.
-2. `.env` 생성(저장소 루트): `D=compose/project_mng_service/nginx_jenkins; cp "$D/.env-example" "$D/.env"` (로그 설정만, 비밀값 없음).
-3. 기동(저장소 루트에서, `--build` 는 업그레이드나 Dockerfile 변경 뒤 nginx 이미지 재빌드): `cd compose/project_mng_service/nginx_jenkins && docker compose up -d --build` — 이미지 `jenkins/jenkins:lts-jdk21`, 데이터는 같은 폴더 `jenkins_home`(HTTP 전용 — 위 규칙 참조). jenkins 이미지는 uid 1000 으로 동작하므로, 기동 때마다 1회성 `jenkins-init` 서비스가 같은 이미지를 root 로 실행해 `jenkins_home` 폴더 소유자를 1000 으로 맞춘 뒤 jenkins 가 뜹니다(클론한 호스트 사용자 uid 가 1000 이 아니어도 `missing rw permissions on JENKINS_HOME` 재시작 루프가 생기지 않음 — master_service 도 동일). 그래서 이 폴더는 호스트에서 uid 1000 소유로 보입니다.
-4. There are advanced information in [Jenkins Official User Documentation](https://www.jenkins.io/doc/)
+#### What it is
+
+Official site: [Jenkins]
+
+**In one line**: a CI/CD server that runs the jobs you define automatically. It repeats "build, test and deploy when code lands" without anyone doing it by hand.
+
+**Concepts**
+
+| Concept | Description |
+|---|---|
+| Job / Pipeline | The definition of the work to run. The modern style writes the pipeline into a `Jenkinsfile` in the repository |
+| Build | One execution of a job, with a number, logs and artifacts |
+| Trigger | What starts it — a git push webhook, a schedule (cron), a manual run, or another job succeeding |
+| Agent / Node | The executor that actually runs the work. By default that is Jenkins itself (the built-in node) |
+| Credentials | Repository keys, registry passwords and the like, stored encrypted and injected into jobs |
+| Plugin | Extensions. Git, Docker and Slack integration — most features are plugins |
+
+**Main features**
+
+| Feature | Description |
+|---|---|
+| Automatic build · test | Runs on every push so broken commits surface immediately |
+| Pipelines | Splits build → test → image → deploy into stages and shows each stage's result |
+| Parallel · distributed runs | Spreads work across several agents |
+| Artifact storage | Keeps build outputs and test reports per build number |
+| Notifications | Reports failures to mail, Slack and so on (via plugins) |
+
+**How it fits with the rest of this repository**
+
+```
+push to Gitea  ->  webhook  ->  Jenkins builds and tests  ->  push image to Harbor
+```
+
+**Worth knowing**
+
+- A fresh install has almost no plugins. Install the recommended set in the wizard after the first login.
+- Everything lives in the single `jenkins_home` folder (configuration, jobs, build history, plugins). That folder is what you back up.
+
+#### Architecture
+
+| Role | Container | Image |
+|---|---|---|
+| Jenkins itself | `jenkins` | `jenkins/jenkins:lts-jdk21` |
+| Ownership fix (one-shot) | `jenkins-init` | the same image, run as root |
+
+- Data accumulates in the **host directory `jenkins_home`** under the compose folder (unlike Plane and Gitea, this is not a named volume).
+- The jenkins image runs as **uid 1000** inside the container. So on every startup `jenkins-init` first sets `jenkins_home` to be owned by 1000. That avoids the `missing rw permissions on JENKINS_HOME` restart loop even when the host account that cloned the repository is not uid 1000. This is why `jenkins_home` appears owned by uid 1000 on the host (master_service behaves the same).
+- No host port is published; the front nginx proxies container port 8080.
+
+#### Standalone installation and use
+
+1. **Prepare the proxy conf** (from the repository root)
+
+   ```bash
+   P=config/web-server/nginx/php/proxy/jenkins
+   cp "$P/jenkins_proxy.conf.example" "$P/jenkins_proxy.conf"   # set server_name
+   ```
+
+2. **Create `.env`** — logging settings only, no secrets.
+
+   ```bash
+   D=compose/project_mng_service/nginx_jenkins
+   cp "$D/.env-example" "$D/.env"
+   ```
+
+3. **Start** — add `--build` to rebuild the nginx image after an upgrade or a Dockerfile change.
+
+   ```bash
+   cd compose/project_mng_service/nginx_jenkins
+   docker compose up -d --build
+   ```
+
+4. **First login** — read the initial admin password and enter it in the web UI.
+
+   ```bash
+   docker compose exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+   ```
+
+See the [Jenkins documentation](https://www.jenkins.io/doc/) for more.
 
 ---
 
 ### Gitea
 
-1. `.env` 생성 후 도메인 입력(비밀값 없음):
+#### What it is
+
+Official site: [Gitea]
+
+**In one line**: GitHub for your own server. Repository hosting with a web UI, issues, pull requests and permissions, running in a single container.
+
+**Concepts**
+
+| Concept | Description |
+|---|---|
+| User · organisation | The repository owner. Create teams under an organisation and grant permissions per team |
+| Repository | A git repository plus issues, PRs, wiki and releases |
+| Pull request | A merge request for a branch, with review, approval and a merge strategy (merge, squash, rebase) |
+| Webhook | Announces events (push, PR, …) to the outside — **this is what triggers Jenkins builds** |
+| Access | Both **SSH** (register a public key, then `ssh://git@<domain>:2222/…`) and **HTTP** (password or token) |
+
+**Main features**
+
+| Feature | Description |
+|---|---|
+| Repository hosting | Private and public, organisation/team permissions, branch protection rules |
+| Issues · PRs | Labels, milestones, reviews, inline code comments |
+| Webhooks · API | Trigger CI on push; manage repositories, users and issues over a REST API |
+| Mirroring | Pull from or push to an external repository on a schedule |
+| Releases | Attach binaries to a tag for distribution |
+| Actions | GitHub Actions-compatible CI (needs a separate runner — not part of this repository's setup) |
+
+**Compared with GitHub and GitLab**
+
+| | Gitea |
+|---|---|
+| Weight | One container, a few hundred MB of memory — far lighter than GitLab |
+| Database | Embedded SQLite by default; move to PostgreSQL or another external DB as you grow |
+| Scope | Centred on repositories, issues and PRs. In this repository CI is a separate tool (Jenkins) |
+
+**Worth knowing**
+
+- Sign-up is **disabled by default** (`GITEA_DISABLE_REGISTRATION=true`). An administrator creates the accounts.
+- git over SSH uses host port `2222`. On a cloud host you must open it in the security group too.
+
+#### Architecture
+
+| Role | Container | Image |
+|---|---|---|
+| Gitea itself | `gitea` | `gitea/gitea` |
+
+- **One container** is all it takes. It uses an embedded SQLite database; to switch to an external DB (PostgreSQL and so on), add `GITEA__database__*` entries to `.env`.
+- All data collects in a single named volume, **`gitea-data`** (repositories, database, SSH host keys).
+- **HTTP** publishes no host port; the front nginx proxies container port 3000.
+- **git over SSH** publishes host port `2222` (`GITEA_SSH_PORT`) directly from the container. Inside the container the image's own OpenSSH serves port 22.
+- The install wizard is skipped through `INSTALL_LOCK` — the `.env` values settle the configuration.
+
+#### Standalone installation and use
+
+1. **Create `.env` and enter the domain** — no secrets involved.
 
    ```bash
    D=compose/project_mng_service/gitea
-   cp "$D/.env-example" "$D/.env"      # GITEA_DOMAIN · GITEA_ROOT_URL 을 실제 도메인으로 수정
+   cp "$D/.env-example" "$D/.env"      # edit GITEA_DOMAIN · GITEA_ROOT_URL
    ```
 
-   `GITEA_ROOT_URL` 은 끝에 `/` 를 포함한 전체 URL 입니다(예: `http://git.example.com/`). HTTPS 로 서비스하면 `https://` 로 적습니다 — 웹훅·클론 URL·OAuth 리다이렉트가 이 값을 씁니다.
+   `GITEA_ROOT_URL` is the full URL including the trailing `/` (for example `http://git.example.com/`). Webhooks, clone URLs and OAuth redirects use this value verbatim. Write `https://` when serving over HTTPS.
 
-2. proxy 샘플 복사(저장소 루트): `P=config/web-server/nginx/php/proxy/gitea; cp "$P/gitea_proxy.conf.example" "$P/gitea_proxy.conf"` 후 `server_name` 수정.
-
-3. 기동(저장소 루트에서): `cd compose/project_mng_service/gitea && docker compose up -d` — HTTP 는 앞단 nginx 가 프록시하고, git over SSH 는 컨테이너가 호스트 `2222`(`GITEA_SSH_PORT`)를 직접 게시합니다. 방화벽·보안 그룹에서 2222 를 열어야 외부에서 SSH 클론이 됩니다 — Docker 가 게시한 포트는 호스트 iptables 의 INPUT 체인을 거치지 않으므로, 호스트 방화벽만 열고 **클라우드 보안 그룹**(예: OCI VCN 보안 목록 · AWS 보안 그룹)을 빠뜨리면 `10.x` 사설 IP 로는 되는데 공인 도메인으로는 timeout 이 납니다.
-
-4. 관리자 계정 생성(최초 1회, 설치 화면은 `INSTALL_LOCK` 으로 건너뜁니다):
+2. **Prepare the proxy conf** (from the repository root)
 
    ```bash
-   cd compose/project_mng_service/gitea      # master: cd compose/master_service, 아래 명령에 -f docker-compose-<stack>.yml 추가
+   P=config/web-server/nginx/php/proxy/gitea
+   cp "$P/gitea_proxy.conf.example" "$P/gitea_proxy.conf"   # set server_name
+   ```
+
+3. **Start**
+
+   ```bash
+   cd compose/project_mng_service/gitea
+   docker compose up -d --build
+   ```
+
+4. **Create the administrator** (once)
+
+   ```bash
    docker compose exec -u git gitea gitea admin user create \
      --username <id> --password '<pw>' --email <mail> --admin
    ```
 
-   기본값은 `GITEA_DISABLE_REGISTRATION=true`(관리자만 계정 생성)입니다. 자체 가입을 허용하려면 `.env` 에서 `false` 로 바꾸세요.
+   Under `master_service`, move to `cd compose/master_service` and add `-f docker-compose-<stack>.yml` to the command above.
 
-5. 사용: 웹 UI 에서 저장소를 만들고 SSH 공개키를 등록한 뒤
+   The default `GITEA_DISABLE_REGISTRATION=true` means only an administrator can create accounts. Set it to `false` in `.env` to allow self sign-up.
+
+5. **Use it** — create a repository in the web UI, register your SSH public key, then
 
    ```bash
-   git clone ssh://git@<도메인>:2222/<계정>/<저장소>.git      # SSH
-   git clone http://<도메인>/<계정>/<저장소>.git               # HTTP(개인 저장소는 토큰·비밀번호 인증)
+   git clone ssh://git@<domain>:2222/<account>/<repo>.git    # SSH
+   git clone http://<domain>/<account>/<repo>.git             # HTTP (token or password for private repos)
    ```
 
-6. 데이터는 named volume `gitea-data`(저장소·SQLite DB·SSH 호스트키) 하나에 모입니다. `docker compose down -v` 는 이 볼륨을 지웁니다. 백업: `docker compose exec -u git gitea gitea dump -c /data/gitea/conf/app.ini -f /tmp/gitea-dump.zip && docker compose cp gitea:/tmp/gitea-dump.zip ~/`. 외부 DB(PostgreSQL 등)를 쓰려면 `.env` 에 `GITEA__database__*` 를 추가합니다.
+6. **Backup**
 
-7. 더 자세한 내용은 [Gitea 공식 문서][Gitea docs] 참고.
+   ```bash
+   docker compose exec -u git gitea gitea dump -c /data/gitea/conf/app.ini -f /tmp/gitea-dump.zip
+   docker compose cp gitea:/tmp/gitea-dump.zip ~/
+   ```
+
+> ⚠️ **Opening SSH 2222 to the outside takes more than a host firewall rule.** Ports published by Docker bypass the host's iptables INPUT chain. On a cloud host you must also add inbound 2222 to the security group (OCI VCN security list, AWS security group and so on). Miss that and the private IP works while the public domain times out.
+
+See the [Gitea documentation][Gitea docs] for more.
 
 ---
 
 ### Harbor
 
-1. 저장소에 있던 Compose v1 설치 스크립트는 삭제됐습니다. 번들된 Harbor v2.0.0 installer(`install.sh` · `common.sh`)는 `docker compose` 플러그인을 쓰지 않고 **`docker-compose` 라는 이름의 명령**을 직접 호출합니다. `common.sh` 의 `check_dockercompose` 가 `docker-compose --version` 을 실행해 **1.18.0 이상**으로 파싱하지 못하면 `[Step 1]` 에서 `Need to install docker-compose(1.18.0+) by yourself first and run this script again.` 를 출력하고 **exit 1** 로 중단하므로, 레거시 Compose v1(1.18.0+) 바이너리를 운영자가 직접 PATH 에 준비합니다. (버전 판정은 이름이 `docker-compose` 인 명령의 출력만 봅니다 — v2 형식 문자열을 내는 같은 이름의 실행 파일도 이 관문을 통과합니다. `docker compose` 플러그인을 부르는 래퍼 `printf '#!/bin/sh\ncase "$1" in --version|version) exec docker compose version ;; esac\nexec docker compose "$@"\n' | sudo tee /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose` 로 http·https 설치와 기동(포털·API·레지스트리 토큰)을 검증했습니다 — 최근 Compose 플러그인은 `docker compose --version` 에 버전이 아니라 사용법을 출력하므로 래퍼가 `version` 으로 바꿔 전달해야 합니다.)
-2. `install.sh` 는 내부에서 `./prepare` 를 **직접 실행**하므로, `prepare` 한 파일만 저장소에 **실행 권한(`100755`)으로 추적**됩니다 — 별도 `chmod` 없이 `[Step 3]` 을 통과합니다. 나머지 스크립트(`install.sh` · `autoinstall.sh` · `update_harbor_config.sh` · `common.sh`)는 `100644` 이며 실행 비트가 필요 없습니다: `common.sh` 는 `install.sh` 가 `source` 하고, 나머지는 아래 3항처럼 **`bash <스크립트>` 형태로 실행**합니다(`autoinstall.sh` 도 내부에서 `bash install.sh` 로 호출합니다). `./install.sh` 처럼 직접 실행하고 싶다면 그 파일에만 `chmod +x` 하세요.
-3. `bash update_harbor_config.sh` 가 도메인·http 포트·https 여부를 입력받아 `harbor.yml` 을 만들고, `bash install.sh` 로 설치합니다. `bash autoinstall.sh` 는 두 단계를 한 번에 실행합니다. 입력하는 경로(ssl·data volume·log)는 `/data` 처럼 일반 경로 그대로 입력합니다(이스케이프 불필요, 예전 `\/data` 입력도 허용). https 를 쓰려면 설치 전에 `compose/project_mng_service/harbor-v2.0.0/ssl/letsencrypt/live/<도메인>/{fullchain,privkey}.pem` 구조로 인증서를 둡니다 — `autoinstall.sh` 가 `ssl/` 의 내용을 입력한 ssl path 아래로 복사하고(`<ssl path>/letsencrypt/live/<도메인>/…`, 기본 `/etc` 는 root 권한 필요), `harbor.yml` 인증서 경로에 입력 도메인을 넣습니다. `install.sh` 재실행 시 기존 harbor 컨테이너를 `down -v` 로 내린 뒤 다시 올립니다. **설치는 root 로 실행합니다**(`sudo bash autoinstall.sh` / `sudo bash install.sh`, Harbor 공식 안내와 동일): `prepare` 가 `common/config/*/env` 를 root 소유 600 으로 만들기 때문에 일반 사용자로 실행하면 `[Step 4]` 에서 `open …/common/config/jobservice/env: permission denied` 로 멈춥니다. 이후 `docker-compose` 명령(`down`·`ps` 등)도 같은 폴더에서 `sudo` 로 실행합니다.
-4. **공존**: Harbor 는 자체 nginx 로 http 포트(기본 80)를 씁니다. 이 저장소의 웹 스택·master_service·단독 proxy 와 같은 호스트라면 **별도 호스트를 권장**하고, 같은 호스트라면 `update_harbor_config.sh` 에서 다른 http 포트를 지정한 뒤 앞단 nginx(예: master_service proxy conf)에서 그 포트로 프록시하세요.
-5. There are advanced information in [Harbor 2.0 Documentation](https://goharbor.io/docs/2.0.0/)
+#### What it is
+
+Official site: [Harbor]
+
+**In one line**: Docker Hub for your own site. Store and distribute container images yourself instead of pushing them outside, with enterprise features such as permissions, scanning and signing.
+
+**Concepts**
+
+| Concept | Description |
+|---|---|
+| Project | The unit that holds images. Set it public or private and give members roles (developer, master, guest) |
+| Repository · tag | Push and pull as `<harbor domain>/<project>/<image>:<tag>` |
+| Robot account | A dedicated credential for CI, separate from human accounts and scoped narrowly |
+| Replication | Synchronises images with another registry (Docker Hub, another Harbor) on a schedule |
+| Retention · GC | Deletes old tags by rule and reclaims disk by collecting unreferenced layers |
+
+**Main features**
+
+| Feature | Description |
+|---|---|
+| Access control | Per-project permissions, LDAP and OIDC integration |
+| Vulnerability scanning | Scans pushed images for CVEs and can block pulls above a severity threshold |
+| Image signing | Enforces that only signed images are deployed |
+| Audit log | Records who pushed, pulled or deleted what |
+| Charts · artifacts | Stores OCI artifacts such as Helm charts besides container images |
+
+**How it fits with the rest of this repository**
+
+```
+Jenkins build  ->  docker push <harbor domain>/<project>/<app>:<tag>  ->  pull on the production host
+```
+
+**Worth knowing**
+
+- Its installation is **completely different** from the other three services — it uses Harbor's official installer rather than a compose definition (see [Architecture](#architecture-3) below).
+- It takes port 80 with its own nginx, so **it is better not to put it on the same host as the other services.**
+- The `hostname` in `harbor.yml` **cannot be a loopback IP (`127.0.0.1`).** Harbor's own validation refuses the install with `127.0.0.1 can not be the hostname` — use a domain or a real IP.
+
+#### Architecture
+
+**This differs from the other services in this repository.** No compose definition is provided.
+
+Instead, Harbor's official installer is bundled (`compose/project_mng_service/harbor-v2.0.0/`). The installer generates its own compose file and starts several containers (portal, core, registry, database, job service and so on).
+
+- The installer does not use the `docker compose` plugin — it calls a command literally named **`docker-compose`** (a Compose v1-era script).
+- Harbor takes an http port (80 by default) with its own nginx.
+
+#### Installation and use
+
+1. **Provide a legacy `docker-compose` command**
+
+   If `check_dockercompose` in `common.sh` cannot parse `docker-compose --version` as **1.18.0 or newer**, it stops at `[Step 1]`:
+
+   ```
+   Need to install docker-compose(1.18.0+) by yourself first and run this script again.
+   ```
+
+   Put a Compose v1 binary on the PATH, or create a wrapper that calls the `docker compose` plugin. The version gate only looks at the output of **a command named `docker-compose`**, so a wrapper passes it.
+
+   ```bash
+   printf '#!/bin/sh\ncase "$1" in --version|version) exec docker compose version ;; esac\nexec docker compose "$@"\n' \
+     | sudo tee /usr/local/bin/docker-compose
+   sudo chmod +x /usr/local/bin/docker-compose
+   ```
+
+   The wrapper rewrites `--version` to `version` because recent Compose plugins print usage instead of a version for `docker compose --version`. This wrapper is what we used to verify http and https installation and startup (portal, API, registry token).
+
+2. **Install** — **run as root** (the same as Harbor's official guidance).
+
+   ```bash
+   cd compose/project_mng_service/harbor-v2.0.0
+   sudo bash autoinstall.sh        # generate the config and install in one go
+   ```
+
+   To split it, run `bash update_harbor_config.sh` to produce `harbor.yml`, then `sudo bash install.sh`. As a normal user it stops at `[Step 4]` with `permission denied`, because `prepare` creates root-owned 0600 files. After installation run `docker-compose down`, `ps` and similar with `sudo` from the same folder.
+
+3. **Inputs** — it asks for the domain, the http port and whether to use https. Paths (ssl, data volume, log) are entered as **plain paths** such as `/data` (no escaping needed).
+
+4. **For https**, place the certificate in this layout before installing.
+
+   ```
+   compose/project_mng_service/harbor-v2.0.0/ssl/letsencrypt/live/<domain>/{fullchain,privkey}.pem
+   ```
+
+   `autoinstall.sh` copies the contents of `ssl/` under the ssl path you entered (`<ssl path>/letsencrypt/live/<domain>/…`) and writes that domain into the certificate paths in `harbor.yml`. The default path `/etc` needs root.
+
+5. **Execute bits** — only `prepare` is tracked with the execute bit (`100755`). The rest (`install.sh`, `autoinstall.sh`, `update_harbor_config.sh`, `common.sh`) are `100644`, so run them as `bash <script>` as shown above. To use `./install.sh` instead, `chmod +x` that one file.
+
+> ⚠️ **Do not put Harbor on the same host as the other services.** Harbor takes port 80 with its own nginx and collides with this repository's web stack, master_service and standalone proxies. If you must share a host, choose a different http port in `update_harbor_config.sh` and proxy to it from the front nginx (for example a master_service proxy conf).
+
+See the [Harbor 2.0 documentation](https://goharbor.io/docs/2.0.0/) for more.
 
 ## Setting up HTTPS on a web server
 
-- This step requires running http nginx server
-- master_service 는 compose 폴더에 `docker-compose.yml` 이 없으므로 아래 모든 `docker compose` 명령에 `-f docker-compose-<stack>.yml` 을 붙입니다(예: `docker compose -f docker-compose-gunicorn.yml exec webserver bash /script/letsencrypt.sh`).
+Bring the site up over HTTP first, obtain a certificate, then switch to the HTTPS config.
 
-  1. 웹 스택: Run nginx_http_conf.sh located in config/web-server/nginx/<service>. Create a conf file for each domain under config/web-server/nginx/<service>/conf.d/. Generated filenames always end with "_http".
+> The master_service folder has no `docker-compose.yml`. Add `-f docker-compose-<stack>.yml` to every `docker compose` command below.
+> Example: `docker compose -f docker-compose-gunicorn.yml exec webserver bash /script/letsencrypt.sh`
 
-  2. Start the stack with `docker compose up -d --build` in its compose folder (--build rebuilds the images after an upgrade or a Dockerfile / uv.lock change). This will run the default nginx using http.
+1. **Generate the HTTP config** — run `config/web-server/nginx/<service>/nginx_http_conf.sh`. It writes one config per domain under `conf.d/`, always ending in `_http`.
 
-  3. The script/letsencrypt.sh shell script file is linked per volume (`/script`). Run `docker compose exec webserver bash /script/letsencrypt.sh` and enter the domain(s) and email. The ACME webroot is fixed to /www/certbot (every generated conf and proxy sample serves /.well-known/acme-challenge/ from it), so there is no webroot input.
+2. **Start over HTTP** — `docker compose up -d --build` in the compose folder. (`--build` is only needed after an upgrade or a Dockerfile / `uv.lock` change.)
 
-  4. Now create a conf file for https: run nginx_https_conf.sh located in config/web-server/nginx/<service>, then remove the http conf file from config/web-server/nginx/<service>/conf.d/.
+3. **Obtain the certificate** — run `docker compose exec webserver bash /script/letsencrypt.sh` and enter the domain(s) and e-mail address. The ACME webroot is fixed at `/www/certbot` (every generated config and proxy sample serves `/.well-known/acme-challenge/` from there), so it is not asked for.
 
-  5. master_service 의 plane · jenkins · gitea proxy 는 생성기가 없습니다 — 인증서 발급 후 `config/web-server/nginx/php/proxy/<svc>/<svc>_proxy.conf` 에 `listen 443 ssl` 서버 블록을 직접 추가합니다(`config/web-server/nginx/php/sample_nginx_https.conf` 의 ssl 지시어 참고). Plane 은 `.env` 의 `PLANE_WEB_URL`·`PLANE_CORS_ALLOWED_ORIGINS` 를, Gitea 는 `GITEA_ROOT_URL` 을 `https://` 로 바꿉니다.
+4. **Switch to the HTTPS config** — run `nginx_https_conf.sh` in the same folder, then delete the `_http` config you used through step 3 from `conf.d/`.
 
-  6. Apply the new conf in the compose folder: `docker compose exec webserver nginx -t && docker compose exec webserver nginx -s reload` (or restart only nginx: `docker compose restart webserver`). Plane 의 `PLANE_WEB_URL` 등이나 Gitea 의 `GITEA_ROOT_URL` 을 바꿨다면 `docker compose up -d plane-api plane-web plane-live` · `docker compose up -d gitea` 로 해당 컨테이너만 다시 만듭니다. 전체 `docker compose restart` 는 모든 서비스를 동시에 재시작하므로 app 이 내려가는 순간 nginx 가 떠 `[emerg] host not found in upstream` 으로 한 번 종료될 수 있습니다(자동 재기동) — 전체 재기동은 `docker compose stop` → `docker compose start` 를 쓰세요. Do not use `docker compose down -v` — named volumes (SQLite `/data`, Plane 데이터, Gitea 저장소) are deleted.
+5. **Proxy configs are manual** — there is no generator for the Plane, Jenkins and Gitea proxy configs. After obtaining the certificate, add a `listen 443 ssl` server block to `config/web-server/nginx/php/proxy/<svc>/<svc>_proxy.conf` yourself (see `config/web-server/nginx/php/sample_nginx_https.conf` for the ssl directives).
 
-  7. Certbot 갱신 cron 은 nginx 이미지 안에 내장되어 있습니다 (`docker/nginx/Dockerfile` 이 빌드 시 crontab 에 등록). 호스트에서 별도 `crontab` 설정은 **불필요** 합니다. 확인: `docker compose exec webserver crontab -l`.
+   Switch the `.env` values that carry URLs to `https://` as well — `PLANE_WEB_URL` and `PLANE_CORS_ALLOWED_ORIGINS` for Plane, `GITEA_ROOT_URL` for Gitea.
+
+6. **Apply** — if you only changed configs, nginx just needs to re-read them.
+
+   ```bash
+   docker compose exec webserver nginx -t && docker compose exec webserver nginx -s reload
+   ```
+
+   If you changed `.env` values in step 5, recreate only those containers.
+
+   ```bash
+   docker compose up -d plane-api plane-web plane-live
+   docker compose up -d gitea
+   ```
+
+   > ⚠️ Do not use a whole-project `docker compose restart`. Everything restarts at once, and nginx can come up while the app is down and die once with `[emerg] host not found in upstream` (it does restart automatically). Restart everything with `stop` → `start` instead.
+   >
+   > ⚠️ Do not use `docker compose down -v` either — it deletes the named volumes (Plane data, Gitea repositories and so on).
+
+7. **Renewal cron** — certbot renewal is built into the nginx image (`docker/nginx/Dockerfile` registers it in crontab at build time). You do **not** need a cron job on the host. Check with `docker compose exec webserver crontab -l`.
+
+## Additional development item
+
+- System integration between Jenkins, Gitea and Plane.
+- Support docker-swarm, kubernetes
+- docker and orchestration monitoring system
+- backup and security system
+- Support cloud such as AWS, GCM etc
 
 ## Community
 
@@ -367,17 +823,12 @@ docker compose restart gunicorn-app   # 기동 명령이 다시 돌며 이관한
 
 ## Partners and Users
 
-- Lim Do-Hyun Owner Developer/project Manager, bluebamus@gmail.com
+- Lim Do-Hyun Owner Developer/project Manager, bluebamus@gmail.com  
   Personal github.io : [bluebamus.github.io]
-
-- 임도현 Owner 개발자/기획자, bluebamus@gmail.com
-  개인 github.io 사이트 : [bluebamus.github.io]
 
 <!-- Markdown link & img dfn's -->
 
 [devspoon-web]: https://github.com/devspoons/devspoon-web
-[Jenkins(KR)]: https://jjeongil.tistory.com/810
-[Harbor(KR)]: https://engineering.linecorp.com/ko/blog/harbor-for-private-docker-registry/
 [Plane]: https://plane.so/
 [Plane docs]: https://developers.plane.so/self-hosting/overview
 [Jenkins]: https://en.wikipedia.org/wiki/Jenkins_(software)
