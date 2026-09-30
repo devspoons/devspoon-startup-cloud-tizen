@@ -10,6 +10,21 @@ This project no longer offers open source development support, for startup comme
 
 The configuration shipped in this repository is still complete and verified end to end — only new open source development support has stopped.
 
+## Repository family — which one to pick
+
+This repository is one of four that share the same foundation. Pick by what you need to run, not by name.
+
+| Repository | What it adds | Pick it when |
+|---|---|---|
+| [devspoon-web] | The web stack only — 6 stacks (gunicorn · uvicorn · uwsgi · daphne · php-7.3 · php-8.4) | You only need to serve a web app or API |
+| [devspoon-startup-web] | + Plane · Jenkins · Gitea · Harbor | You want the project-management solutions too |
+| devspoon-startup-tizen | + a Tizen development environment (`dev_env_service/tizen-env`, `tizenenv`) | You develop for Samsung Tizen IoT devices |
+| **devspoon-startup-cloud-tizen** (this one) | The same set as devspoon-startup-web, positioned for cloud operation | You run on a cloud VM and do not need the Tizen toolchain |
+
+**What this repository actually contains**: the web/app-server layer here is the same as [devspoon-startup-web] — the same five stacks, the same app-server configs, the same nginx configs. The compose files for the Python stacks are byte-identical to [devspoon-web]'s. There is no Tizen toolchain and no SmartThings / Bixby application server.
+
+So the practical difference is positioning, not structure: this repository is the one to clone when the target is a cloud VM and you want the whole project-management set without the Tizen tooling.
+
 ## Project management solutions
 
 These are the four solutions this repository can install. Follow the links for the full description, architecture and installation steps of each.
@@ -53,7 +68,11 @@ Plane, Jenkins and Gitea can run **together** behind a single nginx (→ [all-in
 
 - **Development-oriented docker service** — a good fit for startups and new-service teams that change and test things often.
 
-- **Aimed at plain servers, not AWS / GCM** — this project targets servers you operate yourself and general server hosting. Cloud integration (AWS, GCM and so on) is planned.
+- **Built for cloud VMs as much as for bare servers** — it runs on a server you operate yourself, and it is also used in production on OCI (Oracle Cloud Infrastructure); AWS and GCP work the same way. Nothing here depends on a managed service, so the same compose files move between them.
+
+- **On a cloud VM, remember the security group** — ports Docker publishes bypass the host's iptables INPUT chain. Opening a port with `ufw` alone is not enough: you must also allow it in the cloud security group (OCI VCN security list, AWS security group and so on). The symptom when you forget is distinctive — the private IP works while the public domain times out. This bites hardest on Gitea's git-over-SSH port **2222**, which the container publishes directly (80 and 443 are usually already open).
+
+- **Cloud storage and backups are yours to arrange** — Plane and Gitea keep their data in named volumes on the instance's disk. Snapshot the volume (or run the documented `pg_dump` / `gitea dump`) as part of your instance backup policy; nothing here replicates to object storage on its own.
 
 - **Requirements** — Docker Engine with the Compose plugin. **≥ 2.17** is required for the Python app image builds, and **≥ 2.20** for `include:`, which master_service and the standalone Plane / Gitea stacks rely on. The legacy `docker-compose` (v1) command is only used by the bundled Harbor installer.
 
@@ -805,6 +824,22 @@ Bring the site up over HTTP first, obtain a certificate, then switch to the HTTP
 
 7. **Renewal cron** — certbot renewal is built into the nginx image (`docker/nginx/Dockerfile` registers it in crontab at build time). You do **not** need a cron job on the host. Check with `docker compose exec webserver crontab -l`.
 
+## Verification status
+
+Last verified 2026-09-30 on an Oracle Cloud aarch64 instance (4 vCPU / 23 GiB, Ubuntu 24.04, Docker 29.7.2, Compose v5.4.0). Every check below used internal paths only — `127.0.0.1` with a Host header, and container-to-container calls.
+
+| Area | Result |
+|---|---|
+| Web stacks (5) | Each started, HTTP 200, all containers running with zero restarts, celery connected to the authenticated broker and published a task |
+| Plane standalone | 13 / 13 — migration finished, 12 containers healthy, `/god-mode/` and `/spaces/` reachable, instance API responding |
+| Jenkins standalone | 10 / 10 — reachable through nginx, initial admin password retrievable, `jenkins_home` persisted |
+| Gitea standalone | 14 / 14 — admin created, repository created, HTTP clone and push, commits visible on the server |
+| Harbor standalone | 11 / 11 — installed, portal and API up, project created, registry token issued |
+| All-in-one (master_service, php) | 23 / 23 — **17 containers at once** behind one nginx, split across four domains; `restart webserver` and `stop` → `start` both clean |
+| Static checks | `s6_regression`, `repo-steps`, `preflight` all pass |
+
+**Not verified**: reaching **TCP 2222 over the public domain**. The OCI security list has no inbound rule for it, so it is an infrastructure limitation rather than a defect — git over SSH passes over the private IP. Add the inbound rule and re-run `PARTS="php standalone" bash docs/livetest/master-live.sh` to close it.
+
 ## Additional development item
 
 - System integration between Jenkins, Gitea and Plane.
@@ -829,6 +864,7 @@ Bring the site up over HTTP first, obtain a certificate, then switch to the HTTP
 <!-- Markdown link & img dfn's -->
 
 [devspoon-web]: https://github.com/devspoons/devspoon-web
+[devspoon-startup-web]: https://github.com/devspoons/devspoon-startup-web
 [Plane]: https://plane.so/
 [Plane docs]: https://developers.plane.so/self-hosting/overview
 [Jenkins]: https://en.wikipedia.org/wiki/Jenkins_(software)

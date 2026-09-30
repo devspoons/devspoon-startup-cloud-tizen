@@ -10,6 +10,21 @@
 
 저장소에 실린 구성 자체는 그대로 완전하며 전 항목이 검증돼 있습니다 — 신규 오픈소스 개발 지원만 중단한 것입니다.
 
+## 저장소 선택 가이드 — 어느 것을 고를까
+
+같은 토대를 공유하는 저장소가 넷 있습니다. 이름이 아니라 **무엇을 띄울 것인가**로 고르세요.
+
+| 저장소 | 추가되는 것 | 이럴 때 고릅니다 |
+|---|---|---|
+| [devspoon-web] | 웹 스택만 — 6종(gunicorn · uvicorn · uwsgi · daphne · php-7.3 · php-8.4) | 웹/API 서비스만 필요할 때 |
+| [devspoon-startup-web] | + Plane · Jenkins · Gitea · Harbor | 프로젝트 관리 솔루션까지 함께 쓸 때 |
+| devspoon-startup-tizen | + Tizen 개발 환경(`dev_env_service/tizen-env`, `tizenenv`) | 삼성 Tizen IoT 기기를 개발할 때 |
+| **devspoon-startup-cloud-tizen** (이 저장소) | devspoon-startup-web 과 같은 구성, 클라우드 운영에 맞춘 위치 | 클라우드 VM 에서 돌리고 Tizen 도구는 필요 없을 때 |
+
+**이 저장소에 실제로 들어 있는 것**: 웹/앱 서버 계층은 [devspoon-startup-web] 과 같습니다 — 같은 5개 스택, 같은 앱 서버 설정, 같은 nginx 설정입니다. Python 스택의 compose 파일은 [devspoon-web] 의 것과 바이트 단위로 동일합니다. Tizen 도구 체계와 SmartThings / Bixby 애플리케이션 서버는 없습니다.
+
+즉 실질적인 차이는 구조가 아니라 **쓰임새**입니다. 대상이 클라우드 VM 이고 Tizen 도구 없이 프로젝트 관리 세트를 통째로 쓰고 싶을 때 이 저장소를 클론하면 됩니다.
+
 ## 프로젝트 관리 솔루션
 
 이 저장소가 설치할 수 있는 솔루션 4종입니다. 각 항목의 상세 설명 · 구성 · 설치 방법은 링크를 따라가세요.
@@ -53,7 +68,11 @@ Plane · Jenkins · Gitea 셋은 한 nginx 뒤에 **함께** 띄울 수도 있�
 
 - **개발 지향 docker 서비스** — 수정과 테스트가 잦은 스타트업이나 신규 서비스 개발팀에 적합합니다.
 
-- **AWS · GCM 이 아닌 일반 서버 대상** — 직접 운영하는 서버와 일반 서버 호스팅을 대상으로 합니다. AWS · GCM 등 클라우드 연동은 계획 중입니다.
+- **클라우드 VM 과 베어 서버 모두를 염두에 둡니다** — 직접 운영하는 서버에서 돌아가고, OCI(Oracle Cloud Infrastructure)에서 상용 서비스로도 쓰고 있습니다. AWS · GCP 도 같은 방식으로 동작합니다. 매니지드 서비스에 의존하는 부분이 없어 같은 compose 파일을 그대로 옮길 수 있습니다.
+
+- **클라우드 VM 에서는 보안 그룹을 함께 기억하세요** — Docker 가 게시한 포트는 호스트 iptables 의 INPUT 체인을 거치지 않습니다. `ufw` 로만 열어서는 부족하고 클라우드 보안 그룹(OCI VCN 보안 목록 · AWS 보안 그룹 등)에도 허용해야 합니다. 빠뜨렸을 때의 증상이 특징적입니다 — **사설 IP 로는 되는데 공인 도메인으로는 timeout** 이 납니다. 컨테이너가 직접 게시하는 Gitea 의 git over SSH 포트 **2222** 에서 가장 자주 겪습니다(80 · 443 은 보통 이미 열려 있습니다).
+
+- **클라우드 저장소와 백업은 직접 구성해야 합니다** — Plane 과 Gitea 는 인스턴스 디스크의 named volume 에 데이터를 둡니다. 인스턴스 백업 정책에 볼륨 스냅샷(또는 문서에 있는 `pg_dump` · `gitea dump`)을 포함하세요 — 오브젝트 스토리지로 자동 복제되지는 않습니다.
 
 - **요구 사항** — Compose 플러그인이 포함된 Docker Engine. Python 앱 이미지 빌드에 **2.17 이상**, master_service 와 단독 Plane · Gitea 스택이 쓰는 `include:` 에 **2.20 이상**이 필요합니다. 레거시 `docker-compose`(v1) 명령은 번들된 Harbor installer 만 사용합니다.
 
@@ -806,6 +825,22 @@ HTTP 로 먼저 띄운 뒤 인증서를 발급받고 HTTPS conf 로 교체하는
 
 7. **갱신 cron** — certbot 갱신은 nginx 이미지 안에 내장돼 있습니다(`docker/nginx/Dockerfile` 이 빌드할 때 crontab 에 등록). 호스트에 별도 cron 을 걸 필요가 **없습니다**. 확인: `docker compose exec webserver crontab -l`.
 
+## 검증 상태
+
+최종 검증 2026-09-30, Oracle Cloud aarch64 인스턴스(4 vCPU / 23 GiB, Ubuntu 24.04, Docker 29.7.2, Compose v5.4.0). 아래 검증은 전부 **내부 경로**만 사용했습니다 — `127.0.0.1` + Host 헤더, 컨테이너 간 호출.
+
+| 영역 | 결과 |
+|---|---|
+| 웹 스택 5종 | 각각 기동 · HTTP 200 · 전 컨테이너 running·재시작 0 · celery 가 인증 걸린 브로커에 연결해 태스크 publish |
+| Plane 단독 | 13 / 13 — 마이그레이션 완료, 12개 컨테이너 healthy, `/god-mode/` · `/spaces/` 응답, 인스턴스 API 정상 |
+| Jenkins 단독 | 10 / 10 — nginx 경유 접속, 초기 관리자 비밀번호 조회, `jenkins_home` 영속 |
+| Gitea 단독 | 14 / 14 — 관리자 생성 · 저장소 생성 · HTTP clone·push · 서버에 커밋 반영 |
+| Harbor 단독 | 11 / 11 — 설치, 포털·API 기동, 프로젝트 생성, 레지스트리 토큰 발급 |
+| 통합 구축 (master_service, php) | 23 / 23 — **컨테이너 17개 동시 기동**, 한 nginx 가 도메인 4개로 분기, `restart webserver` 와 `stop` → `start` 모두 정상 |
+| 정적 검사 | `s6_regression` · `repo-steps` · `preflight` 전부 통과 |
+
+**검증하지 못한 것**: **공인 도메인으로 TCP 2222 도달**. OCI 보안 목록에 인바운드 규칙이 없어서이며 제품 결함이 아닙니다 — git over SSH 는 사설 IP 로 통과합니다. 인바운드를 추가한 뒤 `PARTS="php standalone" bash docs/livetest/master-live.sh` 로 재확인하면 됩니다.
+
 ## 추가 개발 항목
 
 - Jenkins · Gitea · Plane 간 시스템 연동
@@ -830,6 +865,7 @@ HTTP 로 먼저 띄운 뒤 인증서를 발급받고 HTTPS conf 로 교체하는
 <!-- Markdown link & img dfn's -->
 
 [devspoon-web]: https://github.com/devspoons/devspoon-web
+[devspoon-startup-web]: https://github.com/devspoons/devspoon-startup-web
 [Plane]: https://plane.so/
 [Plane docs]: https://developers.plane.so/self-hosting/overview
 [Jenkins]: https://en.wikipedia.org/wiki/Jenkins_(software)
